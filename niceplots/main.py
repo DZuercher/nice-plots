@@ -17,26 +17,26 @@ def main():
         "plots of your survey data."
     cli_args = argparse.ArgumentParser(description=description, add_help=True)
     cli_args.add_argument('--config_path', type=str, action='store',
-                          default='configuration_file.yml',
+                          default='example_config.yml',
                           help='Valid path to the configuration file')
     cli_args.add_argument('--data_path', type=str, action='store',
-                          default='data.csv',
+                          default='example_data.csv',
                           help='Valid path to the data file')
     cli_args.add_argument('--codebook_path', type=str, action='store',
-                          default='codebook.csv',
+                          default='example_codebook.csv',
                           help='Valid path to the codebook file')
     cli_args.add_argument('--output_name', type=str, action='store',
-                          default='evaluation1',
+                          default='output1',
                           help="Name prefix for output plots. Serves also as "
                           "output directory name. NOTEL If there are configs "
                           "and codebooks in the output directory they will be "
                           "used instead of the codebook and config file "
                           "specified by the CLI.")
-    cli_args.add_argument('--debug', action='store_true',
-                          default=False, help='Debug mode')
     cli_args.add_argument('--plot_type', type=str, action='store',
                           default='bars', choices=['bars', 'lines'],
                           help='Type of plots to produce')
+    cli_args.add_argument('--debug', action='store_true',
+                          default=False, help='Debug mode')
 
     LOGGER.info("Starting nice-plots")
 

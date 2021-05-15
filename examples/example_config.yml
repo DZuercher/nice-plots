@@ -5,21 +5,20 @@
 # This configuration file also servers as a template for a user-defined
 # configuration file.
 
-
 # The following attributes must be adapted for your project.
 ############################################################
 
 # Name of the column in the codebook that contains the number identifying to
 # which question block the question belongs.
 # Questions with -1 are ignored in the plotting.
-block_id_label : 'Gruppe Plots'
+block_id_label : 'Group'
 
 # Name of the column in the codebook that contains the question text.
 question_label : 'Label'
 
 # Name of the column in the codebook that contains the names of the variables.
 # These names have to match the names of the variables in the data table!
-name_label : 'Variable Name'
+name_label : 'Variable'
 
 # Name of the column in the codebook that contains the mapping from
 # code numbers in the data table to labels.
@@ -41,11 +40,17 @@ mapping_label : 'Value Codes'
 # Optional filter funcitons. Allows to split data into multiple categories
 # based on the values of certain variables. The different categories are compared
 # against each others in the plots.
-filters : {'2. Klasse': 'var8 == 1', '3. Klasse': 'var8 == 2'}
+# The syntax is: {filter1, filter2, ...}
+# and each filter follows the format: 'group name' : 'varibale operator value'
+# NOTE: The whitespaces matter!
+filters : {'Group 1' : 'VAR01 == 1', 'Others' : 'VAR01 >= 2'}
 
 
 # You might want to change some of the following attributes.
 ############################################################
+
+# The delimiter in the codebook and data table (NOTE: Excel uses ; by default)
+delimiter: ','
 
 # Global fontsize in plots
 fontsize : 15
@@ -60,7 +65,7 @@ invert : False
 padding : 0.3
 
 # Filter category colors for lineplots
-lineplot_colors: ['C0', 'C2', 'C3', 'C4', 'C5']
+lineplot_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
 
 # Only changes those attributes if it is really needed.
 ############################################################
@@ -81,4 +86,4 @@ dist : 0.02
 major_dist : 0.1
 
 # Color of the numbers in the bars
-bar_text_color: 'white'
+bar_text_color: 'black'

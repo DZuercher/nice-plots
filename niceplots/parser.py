@@ -30,9 +30,7 @@ def load_config(config_path, output_directory, output_name):
     :return : Directory with configuration objects.
     """
 
-    # load default config file
-    # default_config_path = str(pathlib.Path(__file__).parent.absolute())
-    # default_config_path += '/../config/default_config.yml'
+    # load default config
     default_config_path = config_path
 
     with open(default_config_path, 'r') as f:
@@ -42,7 +40,7 @@ def load_config(config_path, output_directory, output_name):
 
     check_config(ctx)
 
-    # load user defined config file
+    # load output config file
 
     # check if config in output directory already exists
     output_config = output_directory + '/config_{}.yml'.format(output_name)
@@ -90,14 +88,15 @@ def load_codebook(ctx, codebook_path):
     """
 
     # check if there is already a codebook in the output directory
-    output_codebook_path = ctx['output_directory'] + "/codebook.csv"
+    output_codebook_path = ctx['output_directory'] \
+        + f"/codebook_{ctx['output_name']}.csv"
     initialize = False
     if not os.path.exists(output_codebook_path):
         shutil.copyfile(codebook_path, output_codebook_path)
         LOGGER.info(
             f"Copied codebook {codebook_path} -> {output_codebook_path}")
         initialize = True
-    raw_codebook = pd.read_csv(output_codebook_path)
+    raw_codebook = pd.read_csv(output_codebook_path, sep=ctx['delimiter'])
     LOGGER.info(
         f"Loaded codebook from {output_codebook_path}")
 
@@ -129,7 +128,7 @@ def load_data(ctx, data_path):
     :param data_path: Path to data file.
     :return : Data table
     """
-    raw_data = pd.read_csv(data_path)
+    raw_data = pd.read_csv(data_path, sep=ctx['delimiter'])
     LOGGER.info(f"Loaded data table from file {data_path}")
 
     # potentially some pre-processing
