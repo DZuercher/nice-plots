@@ -109,7 +109,7 @@ def add_legend(plotting_data, category_colors, ctx):
         patches.append(mpatches.Patch(
             color=category_colors[ii], label=category))
     plt.legend(handles=patches,
-               ncol=math.ceil(len(category_names) / 2), bbox_to_anchor=(0, 1),
+               ncol=2, bbox_to_anchor=(0, 1),
                loc='lower left', frameon=False, fontsize=ctx['fontsize'])
 
 
@@ -281,7 +281,9 @@ def make_plots(global_plotting_data, ctx):
             add_stats(ax, plotting_data[key], positions, ctx)
 
         all_positions = np.sort(np.asarray(all_positions))
-        if (n_categories % 2) == 0:
+        if n_categories == 1:
+            offset = ctx['dist'] + ctx['width'] / 2.
+        elif (n_categories % 2) == 0:
             offset = ctx['dist'] + (n_categories // 2) * ctx['width']
         else:
             offset = ctx['dist'] / 2. + \
@@ -313,5 +315,5 @@ def make_plots(global_plotting_data, ctx):
             bbox_inches='tight')
 
         if ctx['debug']:
-            if xx > 3:
+            if xx == 0:
                 break

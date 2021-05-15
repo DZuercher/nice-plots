@@ -50,14 +50,39 @@ def add_legend(plotting_data, colors, ctx):
     """
     filter_categories = plotting_data.keys()
 
-    patches = []
-    for ii, category in enumerate(filter_categories):
-        patches.append(mpatches.Patch(
-            color=colors[ii], label=category))
-    plt.legend(handles=patches,
-               ncol=math.ceil(len(filter_categories) / 2),
-               bbox_to_anchor=(0, 1),
-               loc='lower left', frameon=False, fontsize=ctx['fontsize'])
+    if len(list(filter_categories)) > 1:
+        patches = []
+        for ii, category in enumerate(filter_categories):
+            patches.append(mpatches.Patch(
+                color=colors[ii], label=category))
+        plt.legend(handles=patches,
+                   ncol=2,
+                   # no more than 2, otherwise might be longer than plot
+                   # ncol=math.ceil(len(filter_categories) / 2),
+                   bbox_to_anchor=(0, 1),
+                   loc='lower left', frameon=False, fontsize=ctx['fontsize'])
+
+
+def add_stats(ax, plotting_data, positions, ctx):
+    """
+    Add sample size, mean and standard deviation at the end of each bar.
+    :param ax: Axes object
+    :param plotting_data: Plotting data
+    :param positions: y axis positions of the bars.
+    :param ctx: Configuration instance
+    """
+    for ii in range(len(plotting_data)):
+        d = plotting_data[ii]['data'][np.logical_not(
+            np.isnan(plotting_data[ii]['data']))]
+        d = d.astype(int)
+
+        if 'bins' not in plotting_data[ii]['meta']['mapping']:
+            # ignore No Answer
+            d = d[d > 0]
+
+        st = plotting.get_stats(d)
+        ax.text(1.05, positions[ii], st,
+                fontsize=ctx['fontsize'], color='black', va='center')
 
 
 def make_plots(global_plotting_data, ctx):
@@ -160,7 +185,8 @@ def make_plots(global_plotting_data, ctx):
         # x axis
         ax.set_xticks([])
         ax.set_xticklabels([])
-        ax.set_xlim(-0.05, 1.05)
+        # ax.set_xlim(-0.05, 1.05)
+        ax.set_xlim(-0.005, 1.005)
 
         # leave 1 dist from top and bottom border
         ymax = -np.inf
@@ -181,5 +207,5 @@ def make_plots(global_plotting_data, ctx):
             bbox_inches='tight')
 
         if ctx['debug']:
-            if xx > 3:
+            if xx == 0:
                 break
