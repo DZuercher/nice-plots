@@ -37,6 +37,13 @@ name_label : 'Variable'
 # 3 = immer
 mapping_label : 'Value Codes'
 
+# The name of the column in the codebook indicating the missing code
+# (question not filled out by participant)
+missing_label : 'Missing Code'
+
+# Code used to identify participants that chose no answer
+no_answer_code : 99
+
 # Optional filter funcitons. Allows to split data into multiple categories
 # based on the values of certain variables. The different categories are compared
 # against each others in the plots.

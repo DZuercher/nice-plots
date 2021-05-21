@@ -2,10 +2,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import math
 import numpy as np
-from niceplots import plotting
+from niceplots import barplot as plotting
 import frogress
-
-# get distance between plot and question
 
 
 def add_questions(p_d, n_questions, positions, ax, ctx, dist):
@@ -80,7 +78,8 @@ def add_stats(ax, plotting_data, positions, ctx):
             # ignore No Answer
             d = d[d > 0]
 
-        st = plotting.get_stats(d)
+        meta = plotting_data[ii]['meta']
+        st = plotting.get_stats(d, meta)
         ax.text(1.05, positions[ii], st,
                 fontsize=ctx['fontsize'], color='black', va='center')
 

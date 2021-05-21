@@ -2,7 +2,6 @@
 
 import yaml
 import os
-import pathlib
 import pandas as pd
 import shutil
 from niceplots import utils
@@ -10,14 +9,28 @@ from niceplots import utils
 LOGGER = utils.init_logger(__file__)
 
 
-# TODP
 def check_config(ctx):
     """
     Checks if all attributes of the configuration instance are valid.
     :param ctx: Directory with configuration objects.
     """
+    # check that filters are correct
+    filters = ctx['filters']
 
-    pass
+    if len(filters.keys()) == 0:
+        pass
+    else:
+        for f_name in list(filters.keys()):
+            f = filters[f_name]
+            var = f.split(' ')[0].strip()
+            op = f.split(' ')[1].strip()
+            val = f.split(' ')[2].strip()
+            exp = f'np.asarray(data["{var}"]) {op} {val}'
+            try:
+                eval(exp)
+            except:
+                raise Exception(f"Unable to process filter entry {f}. "
+                                "Something is wrong there. Aborting...")
 
 
 def load_config(config_path, output_directory, output_name):
@@ -37,10 +50,6 @@ def load_config(config_path, output_directory, output_name):
         ctx = yaml.load(f, yaml.FullLoader)
     LOGGER.info(
         f"Loaded default configuration file from {default_config_path}")
-
-    check_config(ctx)
-
-    # load output config file
 
     # check if config in output directory already exists
     output_config = output_directory + '/config_{}.yml'.format(output_name)
@@ -68,12 +77,78 @@ def load_config(config_path, output_directory, output_name):
     return ctx
 
 
-# TODO
-def check_codebook(codebook):
+def check_codebook(codebook, ctx):
     """
     Checks validity of codebook.
     :param codebook: The codebook that should be checked.
+    :param ctx: Configuration instance.
     """
+
+    # check that all required columns are there
+    required_columns = ['block_id_label', 'question_label', 'name_label',
+                        'mapping_label', 'missing_label']
+    for col in required_columns:
+        if ctx[col] not in codebook.columns:
+            raise Exception(
+                f"The coumn named {ctx[col]} corresponding to "
+                f"the {col} entry in the configuration file does not exist "
+                "in your codebook but is required by nice-plots. Aborting...")
+
+    # mappings are checked in processing step
+    for mapping in codebook[ctx['mapping_label']]:
+        if mapping.strip() == 'none':
+            continue
+        else:
+            try:
+                mappings_ = mapping.split('\n')
+                ms = []
+                for ma in mappings_:
+                    m = {}
+                    code = int(ma.split('=')[0])
+                    # CHECK THIS!
+                    if code == 0:
+                        continue
+                    m['code'] = code
+                    label = ma.split('=')[1]
+                    # remove leading and trailing whitespaces
+                    m['label'] = label.strip()
+                    ms.append(m)
+            except:
+                raise Exception(
+                    f"Unable to process mapping {mapping}. Aborting...")
+            for m in ms:
+                if not (isinstance(m['code'], int)):
+                    raise Exception(
+                        f"The code {m['code']} in mapping {mapping} "
+                        "is not an integer. Aborting.")
+                if not (m['code'] > 0):
+                    raise Exception(
+                        f"The code {m['code']} in mapping {mapping} "
+                        "must be an integer larger than 0. Aborting.")
+
+    # TODO
+    # check consistency within a question block
+
+
+def check_data(data, ctx):
+    """
+    Checks validity of data.
+    :param data: The data that should be checked.
+    :param ctx: Configuration instance.
+    """
+
+    # check that required columns are there
+    required_columns = ['name_label']
+    for col in required_columns:
+        if ctx[col] not in data.columns:
+            raise Exception(
+                f"The coumn named {ctx[col]} corresponding to "
+                f"the {col} entry in the configuration file does not exist "
+                "in your codebook but is required by nice-plots. Aborting...")
+
+    # TODO
+    # check entries (what to do with strings?)
+
     pass
 
 
@@ -100,8 +175,6 @@ def load_codebook(ctx, codebook_path):
     LOGGER.info(
         f"Loaded codebook from {output_codebook_path}")
 
-    check_codebook(raw_codebook)
-
     # add some additional columns to the codebook
     additional_codebook_entries = ['color_scheme', 'invert']
 
@@ -118,6 +191,8 @@ def load_codebook(ctx, codebook_path):
     codebook = raw_codebook
     ctx['codebook_path'] = output_codebook_path
     ctx['additional_codebook_entries'] = additional_codebook_entries
+
+    check_codebook(codebook, ctx)
     return codebook
 
 
@@ -133,4 +208,6 @@ def load_data(ctx, data_path):
 
     # potentially some pre-processing
     data = raw_data
+
+    check_data(data, ctx)
     return data

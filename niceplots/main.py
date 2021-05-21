@@ -2,7 +2,7 @@
 
 from niceplots import parser
 from niceplots import process
-from niceplots import plotting
+from niceplots import barplot
 from niceplots import lineplot
 from niceplots import utils
 import os
@@ -62,7 +62,7 @@ def main():
 
     plotting_data = process.process_data(data, codebook, ctx)
     if ARGS.plot_type == 'bars':
-        plotting.make_plots(plotting_data, ctx)
+        barplot.make_plots(plotting_data, ctx)
     elif ARGS.plot_type == 'lines':
         lineplot.make_plots(plotting_data, ctx)
     else:

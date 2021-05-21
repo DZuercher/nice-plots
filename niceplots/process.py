@@ -7,7 +7,7 @@ import frogress
 LOGGER = utils.init_logger(__file__)
 
 
-def parse_mapping(data, mapping, var_name):
+def parse_mapping(data, mapping, var_name, ctx):
     """
     Extract a mapping from codes to labels.
     """
@@ -19,17 +19,20 @@ def parse_mapping(data, mapping, var_name):
         else:
             mappings = mapping.split('\n')
             ms = []
+            contains_no_answer = False
             for ma in mappings:
                 m = {}
                 code = int(ma.split('=')[0])
-                if code == 0:
+                if (code == 0):
                     continue
+                if (code == ctx['no_answer_code']):
+                    contains_no_answer = True
                 m['code'] = code
                 label = ma.split('=')[1]
                 # remove leading and trailing whitespaces
                 m['label'] = label.strip()
                 ms.append(m)
-        return ms
+        return ms, contains_no_answer
     except ValueError:
         raise ValueError(
             f"Your mapping {mapping} for variable {var_name} is ill-defined.")
@@ -51,15 +54,21 @@ def get_meta(var_idx, ctx, data, codebook):
     meta = {'question': np.asarray(
         codebook[ctx['question_label']], dtype=str)[var_idx]}
 
+    # get missing code
+    meta = {'missing_code': np.asarray(
+        codebook[ctx['missing_label']], dtype=int)[var_idx]}
+
     # get the code -> text label mapping
-    meta['mapping'] = parse_mapping(data[variable_name], np.asarray(
-        codebook[ctx['mapping_label']], dtype=str)[var_idx], variable_name)
+    meta['mapping'], contains_no_answer = parse_mapping(
+        data[variable_name], np.asarray(
+            codebook[ctx['mapping_label']], dtype=str)[var_idx],
+        variable_name, ctx)
 
     # get the plotting configurations
     for key in ctx['additional_codebook_entries']:
         meta[key] = np.asarray(codebook[key + ' - nice-plots'],
                                dtype=str)[var_idx]
-    return meta
+    return meta, contains_no_answer
 
 
 def parse_filter_functions(data, ctx):
@@ -87,13 +96,6 @@ def parse_filter_functions(data, ctx):
             idx = eval(exp)
             fs.append(idx)
         return (f_names, fs)
-
-
-# TODO
-def check_codeblocks():
-    # check consistency
-    # within one block all the meta data must be equivalent
-    pass
 
 
 def process_data(data, codebook, ctx):
@@ -139,13 +141,24 @@ def process_data(data, codebook, ctx):
                         "in your data")
 
                 d = np.asarray(data[variable_name][cat])
+
                 # get meta data
-                meta = get_meta(var_idx, ctx, data, codebook)
+                meta, contains_no_answer = get_meta(
+                    var_idx, ctx, data, codebook)
+
+                # filter out missing values
+                d = d[np.logical_not(np.isclose(d), meta['missing_code'])]
+
+                # filter out no answers but add number of no answers to meta
+                if contains_no_answer:
+                    meta['no_anser'] = d[np.isclose(d),
+                                         meta['no_answer_code']].size
+                    d = d[np.logical_not(np.isclose(d),
+                                         meta['no_answer_code'])]
+
                 p_d.append({'meta': meta, 'data': d})
 
             plotting_data[category_labels[ii]] = p_d
         global_plotting_data.append(plotting_data)
-
-    check_codeblocks()
 
     return global_plotting_data

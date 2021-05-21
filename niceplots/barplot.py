@@ -113,10 +113,13 @@ def add_legend(plotting_data, category_colors, ctx):
                loc='lower left', frameon=False, fontsize=ctx['fontsize'])
 
 
-def get_stats(d):
+def get_stats(d, meta):
     if d.size > 0:
         st = 'n = {}\nm = {:.2f}\ns = {:.2f}'.format(
             d.size, np.mean(d), np.std(d))
+        if 'no_answer' in meta.keys():
+            st += '\nE = {}'.format(meta['no_answer'])
+
     else:
         st = '{:<9}'.format('n = {}'.format(d.size))
     return st
@@ -133,13 +136,14 @@ def add_stats(ax, plotting_data, positions, ctx):
     for ii in range(len(plotting_data)):
         d = plotting_data[ii]['data'][np.logical_not(
             np.isnan(plotting_data[ii]['data']))]
-        d = d.astype(int)
+        d = d.astype(float)
 
         if 'bins' not in plotting_data[ii]['meta']['mapping']:
-            # ignore No Answer
+            # ignore 0 values
             d = d[d > 0]
 
-        st = get_stats(d)
+        meta = plotting_data[ii]['meta']
+        st = get_stats(d, meta)
         ax.text(1.05, positions[ii], st,
                 fontsize=ctx['fontsize'], color='black', va='center')
 
