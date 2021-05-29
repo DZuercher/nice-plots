@@ -3,6 +3,10 @@
 import os
 import logging
 import sys
+import matplotlib.pyplot as plt
+import hyphen
+from hyphen.textwrap2 import fill
+import numpy as np
 
 
 def init_logger(filepath, logging_level='info'):
@@ -46,3 +50,71 @@ def set_logger_level(logger, level):
                       'debug': logging.DEBUG}
 
     logger.setLevel(logging_levels[level])
+
+
+def get_render_size(object, ctx):
+    """
+    Returns width of a text.
+    :param object: String to render
+    :param ctx: Configuration instance
+    :return : Width of text
+    """
+    figsize = (ctx['plot_width'], 10)
+    f = plt.figure(figsize=figsize)
+    rend = f.canvas.get_renderer()
+    t = plt.text(0.5, 0.5, object, fontsize=ctx['fontsize'])
+    extent = t.get_window_extent(renderer=rend)
+    ax = f.gca()
+    extent = extent.transformed(ax.transAxes.inverted())
+    plt.close(f)
+    return np.abs(extent.width)
+
+
+def get_question_size(plotting_data, ctx):
+    """
+    Returns width of question text.
+    :param plotting_data: Plotting data
+    :param ctx: Configuration instance
+    :return : Width of question text
+    """
+    question = ''
+    for p_d in plotting_data:
+        p = p_d[list(p_d.keys())[0]]
+        for p_ in p:
+            if len(p_['meta']['question']) > len(question):
+                question = p_['meta']['question']
+    extent = get_render_size(wrap_text(question), ctx)
+    return extent
+
+
+def get_stats(d, meta):
+    if d.size > 0:
+        st = 'n = {}\nm = {:.2f}\ns = {:.2f}'.format(
+            d.size, np.mean(d), np.std(d))
+        if 'no_answer' in meta.keys():
+            st += '\nE = {}'.format(meta['no_answer'])
+
+    else:
+        st = '{:<9}'.format('n = {}'.format(d.size))
+    return st
+
+
+def add_questions(p_d, n_questions, positions, ax, ctx, dist):
+    """
+    Add the text of the question for which the distribution of the answer
+    is displayed.
+    """
+    # add questions
+    questions = []
+    for q in p_d:
+        questions.append(q['meta']['question'])
+    for nq in range(n_questions):
+        lab = wrap_text(questions[nq])
+        ax.text(dist, positions[nq], lab, va='center',
+                ha='left', fontsize=ctx['fontsize'])
+    ax.set_yticks(np.arange(n_questions))
+
+
+def wrap_text(text, width=60, lang='de_DE'):
+    hyp = hyphen.Hyphenator(lang)
+    return fill(text, width=width, use_hyphenator=hyp)

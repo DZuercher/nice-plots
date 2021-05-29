@@ -5,16 +5,27 @@ import os
 import pandas as pd
 import shutil
 from niceplots import utils
+import numpy as np
 
 LOGGER = utils.init_logger(__file__)
 
 
-def check_config(ctx):
+def isnumber(x):
+    try:
+        float(x)
+        return True
+    except:
+        return False
+
+
+def check_config(ctx, codebook, data):
     """
     Checks if all attributes of the configuration instance are valid.
     :param ctx: Directory with configuration objects.
+    :param codebook: Codebook
+    :param data: Data array
     """
-    # check that filters are correct
+   # check that filters are correct
     filters = ctx['filters']
 
     if len(filters.keys()) == 0:
@@ -28,9 +39,14 @@ def check_config(ctx):
             exp = f'np.asarray(data["{var}"]) {op} {val}'
             try:
                 eval(exp)
-            except:
-                raise Exception(f"Unable to process filter entry {f}. "
-                                "Something is wrong there. Aborting...")
+            except KeyError:
+                raise Exception(
+                    f"Unable to process filter entry {f}. "
+                    f"The column {var} does not exist in your data.")
+            except SyntaxError:
+                raise Exception(
+                    f"Unable to process filter entry {f}. "
+                    f"Something with the Syntax is wrong.")
 
 
 def load_config(config_path, output_directory, output_name):
@@ -49,7 +65,7 @@ def load_config(config_path, output_directory, output_name):
     with open(default_config_path, 'r') as f:
         ctx = yaml.load(f, yaml.FullLoader)
     LOGGER.info(
-        f"Loaded default configuration file from {default_config_path}")
+        'Loaded default configuration file from {}'.format(default_config_path))
 
     # check if config in output directory already exists
     output_config = output_directory + '/config_{}.yml'.format(output_name)
@@ -68,8 +84,6 @@ def load_config(config_path, output_directory, output_name):
                 "Overriding default value of argument "
                 f"{obj} -> {user_ctx[obj]}")
             ctx[obj] = user_ctx[obj]
-
-    check_config(ctx)
 
     ctx['output_name'] = output_name
     ctx['config_file'] = output_config
@@ -94,62 +108,88 @@ def check_codebook(codebook, ctx):
                 f"the {col} entry in the configuration file does not exist "
                 "in your codebook but is required by nice-plots. Aborting...")
 
-    # mappings are checked in processing step
-    for mapping in codebook[ctx['mapping_label']]:
-        if mapping.strip() == 'none':
-            continue
-        else:
-            try:
-                mappings_ = mapping.split('\n')
-                ms = []
-                for ma in mappings_:
-                    m = {}
-                    code = int(ma.split('=')[0])
-                    # CHECK THIS!
-                    if code == 0:
-                        continue
-                    m['code'] = code
-                    label = ma.split('=')[1]
-                    # remove leading and trailing whitespaces
-                    m['label'] = label.strip()
-                    ms.append(m)
-            except:
+    block_id_label = ctx['block_id_label']
+    # define the variable blocks
+    block_ids = np.asarray(codebook[block_id_label], dtype=int)
+
+    # check for each question block if mapping is valid and consistent
+    # throughout the block
+    for block_id in np.unique(block_ids[block_ids >= 0]):
+        variable_indices = np.where(block_ids == block_id)[0]
+
+        # loop over mappings in block
+        mappings = []
+        for mapping in codebook[ctx['mapping_label']][variable_indices]:
+            if mapping.strip() == 'none':
+                continue
+            else:
+                try:
+                    mappings_ = mapping.split('\n')
+                    ms = []
+                    for ma in mappings_:
+                        m = {}
+                        code = int(ma.split('=')[0])
+                        # CHECK THIS!
+                        if code == 0:
+                            continue
+                        m['code'] = code
+                        label = ma.split('=')[1]
+                        # remove leading and trailing whitespaces
+                        m['label'] = label.strip()
+                        ms.append(m)
+                except:
+                    raise Exception(
+                        f"Unable to process mapping {mapping}. Aborting...")
+                for m in ms:
+                    if not (isinstance(m['code'], int)):
+                        raise Exception(
+                            f"The code {m['code']} in mapping {mapping} "
+                            "is not an integer. Aborting.")
+                    if not (m['code'] > 0):
+                        raise Exception(
+                            f"The code {m['code']} in mapping {mapping} "
+                            "must be an integer larger than 0. Aborting.")
+            mappings.append(ms)
+        # check consistency
+        for ii, m in enumerate(mappings):
+            if m != mappings[0]:
                 raise Exception(
-                    f"Unable to process mapping {mapping}. Aborting...")
-            for m in ms:
-                if not (isinstance(m['code'], int)):
-                    raise Exception(
-                        f"The code {m['code']} in mapping {mapping} "
-                        "is not an integer. Aborting.")
-                if not (m['code'] > 0):
-                    raise Exception(
-                        f"The code {m['code']} in mapping {mapping} "
-                        "must be an integer larger than 0. Aborting.")
-
-    # TODO
-    # check consistency within a question block
+                    f"Problem in Codebook for question block {block_id}."
+                    "The mappings for all variables in a question block must "
+                    "be the same, but I found mappings the two mappings \n \n"
+                    f"{codebook[ctx['name_label']][variable_indices[ii]]}:"
+                    " \n"
+                    f"{m} \n \n and \n \n"
+                    f"{codebook[ctx['name_label']][variable_indices[0]]}:"
+                    " \n"
+                    f"{mappings[0]} "
+                    "\n \n to be unequal!")
 
 
-def check_data(data, ctx):
+def check_data(data, ctx, codebook):
     """
     Checks validity of data.
     :param data: The data that should be checked.
     :param ctx: Configuration instance.
+    :param codebook: The codebook.
     """
 
     # check that required columns are there
-    required_columns = ['name_label']
+    required_columns = codebook[ctx['name_label']]
     for col in required_columns:
-        if ctx[col] not in data.columns:
+        if col not in data.columns:
             raise Exception(
-                f"The coumn named {ctx[col]} corresponding to "
-                f"the {col} entry in the configuration file does not exist "
-                "in your codebook but is required by nice-plots. Aborting...")
+                f"The coumn named {col} defined in your codebook "
+                f"does not exist in your data. Aborting...")
 
-    # TODO
-    # check entries (what to do with strings?)
-
-    pass
+    # set all non numerical entries in data to NaN
+    string_filter = data.applymap(isnumber)
+    num_strings = np.asarray(string_filter).size \
+        - np.sum(np.asarray(string_filter))
+    LOGGER.warning(f"Found {num_strings} non-numerical values in "
+                   "your data. Setting them to NaN.")
+    data = data[string_filter]
+    data = data.applymap(float)
 
 
 def load_codebook(ctx, codebook_path):
@@ -171,12 +211,14 @@ def load_codebook(ctx, codebook_path):
         LOGGER.info(
             f"Copied codebook {codebook_path} -> {output_codebook_path}")
         initialize = True
-    raw_codebook = pd.read_csv(output_codebook_path, sep=ctx['delimiter'])
+    raw_codebook = pd.read_csv(output_codebook_path, keep_default_na=False,
+                               sep=ctx['delimiter'], dtype='object')
+
     LOGGER.info(
         f"Loaded codebook from {output_codebook_path}")
 
     # add some additional columns to the codebook
-    additional_codebook_entries = ['color_scheme', 'invert']
+    additional_codebook_entries = ['color_scheme', 'invert', 'nbins', 'unit']
 
     if initialize:
         # add the plotting options columns to the codebook
@@ -185,18 +227,23 @@ def load_codebook(ctx, codebook_path):
             LOGGER.info(f"Added additional column {key} - nice-plots to "
                         f"codebook. Initialized with value {ctx[key]}")
 
-    # write output codebook to the output directory
-    raw_codebook.to_csv(output_codebook_path, index=False)
-
     codebook = raw_codebook
     ctx['codebook_path'] = output_codebook_path
     ctx['additional_codebook_entries'] = additional_codebook_entries
 
+    # convert to numeric where necessary
+    numeric_entries = ['nbins - nice-plots', ctx['missing_label']]
+    for key in numeric_entries:
+        codebook[key] = pd.to_numeric(codebook[key])
+
     check_codebook(codebook, ctx)
+
+    # write output codebook to the output directory
+    codebook.to_csv(output_codebook_path, index=False)
     return codebook
 
 
-def load_data(ctx, data_path):
+def load_data(ctx, data_path, codebook):
     """
     Load and preprocess the data table.
     :param ctx: Configuration instance.
@@ -209,5 +256,5 @@ def load_data(ctx, data_path):
     # potentially some pre-processing
     data = raw_data
 
-    check_data(data, ctx)
+    check_data(data, ctx, codebook)
     return data

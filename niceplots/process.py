@@ -7,35 +7,32 @@ import frogress
 LOGGER = utils.init_logger(__file__)
 
 
-def parse_mapping(data, mapping, var_name, ctx):
+def parse_mapping(data, mapping, var_name, ctx, nbins):
     """
     Extract a mapping from codes to labels.
     """
-    try:
-        if mapping.strip() == 'none':
-            nbins = 5
-            ms = {'bins': np.linspace(
-                np.min(data) - 0.5, np.max(data) + 0.5, nbins + 1)}
-        else:
-            mappings = mapping.split('\n')
-            ms = []
-            contains_no_answer = False
-            for ma in mappings:
-                m = {}
-                code = int(ma.split('=')[0])
-                if (code == 0):
-                    continue
-                if (code == ctx['no_answer_code']):
-                    contains_no_answer = True
-                m['code'] = code
-                label = ma.split('=')[1]
-                # remove leading and trailing whitespaces
-                m['label'] = label.strip()
-                ms.append(m)
-        return ms, contains_no_answer
-    except ValueError:
-        raise ValueError(
-            f"Your mapping {mapping} for variable {var_name} is ill-defined.")
+    contains_no_answer = False
+    if mapping.strip() == 'none':
+        nbins = ctx['nbins']
+        ms = {'bins': np.linspace(
+            np.min(data) - 0.5, np.max(data) + 0.5, nbins + 1)}
+    else:
+        mappings = mapping.split('\n')
+        ms = []
+        for ma in mappings:
+            m = {}
+            code = int(ma.split('=')[0])
+            if (code == 0):
+                continue
+            if (code == ctx['no_answer_code']):
+                contains_no_answer = True
+                continue
+            m['code'] = code
+            label = ma.split('=')[1]
+            # remove leading and trailing whitespaces
+            m['label'] = label.strip()
+            ms.append(m)
+    return ms, contains_no_answer
 
 
 def get_meta(var_idx, ctx, data, codebook):
@@ -55,14 +52,14 @@ def get_meta(var_idx, ctx, data, codebook):
         codebook[ctx['question_label']], dtype=str)[var_idx]}
 
     # get missing code
-    meta = {'missing_code': np.asarray(
-        codebook[ctx['missing_label']], dtype=int)[var_idx]}
+    meta['missing_code'] = np.asarray(
+        codebook[ctx['missing_label']], dtype=int)[var_idx]
 
     # get the code -> text label mapping
     meta['mapping'], contains_no_answer = parse_mapping(
         data[variable_name], np.asarray(
             codebook[ctx['mapping_label']], dtype=str)[var_idx],
-        variable_name, ctx)
+        variable_name, ctx, codebook['nbins - nice-plots'][var_idx])
 
     # get the plotting configurations
     for key in ctx['additional_codebook_entries']:
@@ -147,14 +144,14 @@ def process_data(data, codebook, ctx):
                     var_idx, ctx, data, codebook)
 
                 # filter out missing values
-                d = d[np.logical_not(np.isclose(d), meta['missing_code'])]
+                d = d[np.logical_not(np.isclose(d, meta['missing_code']))]
 
                 # filter out no answers but add number of no answers to meta
                 if contains_no_answer:
-                    meta['no_anser'] = d[np.isclose(d),
-                                         meta['no_answer_code']].size
-                    d = d[np.logical_not(np.isclose(d),
-                                         meta['no_answer_code'])]
+                    meta['no_answer'] = d[np.isclose(d,
+                                                    ctx['no_answer_code'])].size
+                    d = d[np.logical_not(np.isclose(d,
+                                                    ctx['no_answer_code']))]
 
                 p_d.append({'meta': meta, 'data': d})
 

@@ -50,23 +50,34 @@ no_answer_code : 99
 # The syntax is: {filter1, filter2, ...}
 # and each filter follows the format: 'group name' : 'varibale operator value'
 # NOTE: The whitespaces matter!
-filters : {'Group 1' : 'VAR01 == 1', 'Others' : 'VAR01 >= 2'}
-
+# Example:
+#filters : {'Group 1' : 'VAR01 == 1', 'Others' : 'VAR01 >= 2'}
+filters : {}
 
 # You might want to change some of the following attributes.
 ############################################################
 
 # The delimiter in the codebook and data table (NOTE: Excel uses ; by default)
-delimiter: ','
+delimiter : ','
 
 # Global fontsize in plots
 fontsize : 15
+
+# fontsize for stats
+fontsize_stats : 12
 
 # default colorscheme
 color_scheme : 'RdYlGn'
 
 # If True the label categories are plotted from largest to smallest.
 invert : False
+
+# Number of bins used by default to create linear binning scheme.
+# Only used if mapping is none
+nbins : 5
+
+# Default unit used for legend if mapping is none
+unit : ''
 
 # Distance between labels and question text.
 padding : 0.3

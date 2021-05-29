@@ -5,7 +5,7 @@ import os
 from setuptools import find_packages, setup
 
 requirements = ["pyyaml", "pandas", "argparse", "pathlib", "numpy",
-                "matplotlib", "PyHyphen", "frogress"]
+                "matplotlib", "PyHyphen", "frogress", "multiprocessing"]
 
 with open("README.rst") as readme_file:
     readme = readme_file.read()

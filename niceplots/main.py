@@ -6,13 +6,45 @@ from niceplots import barplot
 from niceplots import lineplot
 from niceplots import utils
 import os
+import sys
 import pathlib
 import argparse
+import platform
+import subprocess
+
+
+def is_tool(name):
+    try:
+        devnull = open(os.devnull)
+        subprocess.Popen([name], stdout=devnull, stderr=devnull).communicate()
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            return False
+    return True
+
+
+def find_prog(prog):
+    if is_tool(prog):
+        cmd = "where" if platform.system() == "Windows" else "which"
+
+        p = subprocess.Popen([cmd, prog], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, err = p.communicate()
+        rc = p.returncode
+        return output.decode('utf-8').rstrip()
+
 
 LOGGER = utils.init_logger(__file__)
 
 
 def main():
+    # For OSX > High Sierra disable additional security features that prevent
+    # multithreading
+    if os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] != 'YES':
+        os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+        exe = find_prog("nice-plots")
+        os.execve(exe, sys.argv, os.environ)
+
     description = "Nice plots allows you to (hopefully) easily and automatic "\
         "plots of your survey data."
     cli_args = argparse.ArgumentParser(description=description, add_help=True)
@@ -35,8 +67,9 @@ def main():
     cli_args.add_argument('--plot_type', type=str, action='store',
                           default='bars', choices=['bars', 'lines'],
                           help='Type of plots to produce')
-    cli_args.add_argument('--debug', action='store_true',
-                          default=False, help='Debug mode')
+    cli_args.add_argument('--parallel', action='store_true',
+                          default=True,
+                          help='If True nice-plots runs in parallel')
 
     LOGGER.info("Starting nice-plots")
 
@@ -54,17 +87,23 @@ def main():
     ctx = parser.load_config(ARGS.config_path,
                              output_directory,
                              ARGS.output_name)
-    ctx['debug'] = ARGS.debug
 
+    LOGGER.info("Loading codebook...")
     codebook = parser.load_codebook(ctx, ARGS.codebook_path)
 
-    data = parser.load_data(ctx, ARGS.data_path)
+    LOGGER.info("Loading data...")
+    data = parser.load_data(ctx, ARGS.data_path, codebook)
 
+    parser.check_config(ctx, codebook, data)
+
+    LOGGER.info("Processing input data...")
     plotting_data = process.process_data(data, codebook, ctx)
+
+    LOGGER.info("Producing your plots please wait...")
     if ARGS.plot_type == 'bars':
-        barplot.make_plots(plotting_data, ctx)
+        barplot.make_plots(plotting_data, ctx, ARGS.parallel)
     elif ARGS.plot_type == 'lines':
-        lineplot.make_plots(plotting_data, ctx)
+        lineplot.make_plots(plotting_data, ctx, ARGS.parallel)
     else:
         raise Exception(f"Plotting type {ARGS.plot_type} does not exist.")
 
