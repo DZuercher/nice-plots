@@ -104,7 +104,7 @@ def check_codebook(codebook, ctx):
     for col in required_columns:
         if ctx[col] not in codebook.columns:
             raise Exception(
-                f"The coumn named {ctx[col]} corresponding to "
+                f"The column named {ctx[col]} corresponding to "
                 f"the {col} entry in the configuration file does not exist "
                 "in your codebook but is required by nice-plots. Aborting...")
 
@@ -154,16 +154,17 @@ def check_codebook(codebook, ctx):
         for ii, m in enumerate(mappings):
             if m != mappings[0]:
                 raise Exception(
-                    f"Problem in Codebook for question block {block_id}."
-                    "The mappings for all variables in a question block must "
-                    "be the same, but I found mappings the two mappings \n \n"
+                    f"Problem in Codebook for question block "
+                    f"{block_id}."
+                    f"The mappings for all variables in a question block must "
+                    f"be the same, but I found the two mappings \n \n"
                     f"{codebook[ctx['name_label']][variable_indices[ii]]}:"
-                    " \n"
+                    f" \n"
                     f"{m} \n \n and \n \n"
                     f"{codebook[ctx['name_label']][variable_indices[0]]}:"
-                    " \n"
+                    f" \n"
                     f"{mappings[0]} "
-                    "\n \n to be unequal!")
+                    f"\n \n to be unequal!")
 
 
 def check_data(data, ctx, codebook):
@@ -179,7 +180,7 @@ def check_data(data, ctx, codebook):
     for col in required_columns:
         if col not in data.columns:
             raise Exception(
-                f"The coumn named {col} defined in your codebook "
+                f"The column named {col} defined in your codebook "
                 f"does not exist in your data. Aborting...")
 
     # set all non numerical entries in data to NaN
@@ -205,17 +206,16 @@ def load_codebook(ctx, codebook_path):
     # check if there is already a codebook in the output directory
     output_codebook_path = ctx['output_directory'] \
         + f"/codebook_{ctx['output_name']}.csv"
-    initialize = False
-    if not os.path.exists(output_codebook_path):
-        shutil.copyfile(codebook_path, output_codebook_path)
-        LOGGER.info(
-            f"Copied codebook {codebook_path} -> {output_codebook_path}")
+    if os.path.exists(output_codebook_path):
+        raw_codebook = pd.read_csv(output_codebook_path, keep_default_na=False,
+                                   sep=ctx['delimiter'], dtype='object')
+        initialize = False
+        LOGGER.info(f"Loaded codebook from {output_codebook_path}")
+    else:
+        raw_codebook = pd.read_csv(codebook_path, keep_default_na=False,
+                                   sep=ctx['delimiter'], dtype='object')
         initialize = True
-    raw_codebook = pd.read_csv(output_codebook_path, keep_default_na=False,
-                               sep=ctx['delimiter'], dtype='object')
-
-    LOGGER.info(
-        f"Loaded codebook from {output_codebook_path}")
+        LOGGER.info(f"Loaded codebook from {codebook_path}")
 
     # add some additional columns to the codebook
     additional_codebook_entries = ['color_scheme', 'invert', 'nbins', 'unit']
@@ -239,7 +239,10 @@ def load_codebook(ctx, codebook_path):
     check_codebook(codebook, ctx)
 
     # write output codebook to the output directory
-    codebook.to_csv(output_codebook_path, index=False)
+    if initialize:
+        codebook.to_csv(output_codebook_path, index=False)
+        LOGGER.info(
+            f"Copied codebook {codebook_path} -> {output_codebook_path}")
     return codebook
 
 

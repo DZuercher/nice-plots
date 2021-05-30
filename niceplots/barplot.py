@@ -276,8 +276,8 @@ def plot_barplots(xx, global_plotting_data, ctx):
         bbox_inches='tight')
 
 
-def make_plots(global_plotting_data, ctx, parallel):
-    if parallel:
+def make_plots(global_plotting_data, ctx, serial):
+    if not serial:
         LOGGER.info("Running in parallel mode")
         with Pool() as p:
             p.map(

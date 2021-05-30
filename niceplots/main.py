@@ -38,13 +38,6 @@ LOGGER = utils.init_logger(__file__)
 
 
 def main():
-    # For OSX > High Sierra disable additional security features that prevent
-    # multithreading
-    if os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] != 'YES':
-        os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
-        exe = find_prog("nice-plots")
-        os.execve(exe, sys.argv, os.environ)
-
     description = "Nice plots allows you to (hopefully) easily and automatic "\
         "plots of your survey data."
     cli_args = argparse.ArgumentParser(description=description, add_help=True)
@@ -67,14 +60,29 @@ def main():
     cli_args.add_argument('--plot_type', type=str, action='store',
                           default='bars', choices=['bars', 'lines'],
                           help='Type of plots to produce')
-    cli_args.add_argument('--parallel', action='store_true',
-                          default=True,
-                          help='If True nice-plots runs in parallel')
+    cli_args.add_argument('--serial', action='store_true',
+                          default=False,
+                          help='If True nice-plots runs in serial mode '
+                          'instead of parallel.')
 
     LOGGER.info("Starting nice-plots")
 
     ARGS = cli_args.parse_args()
     LOGGER.info("CLI arguments parsed")
+
+    if not ARGS.serial:
+        # For OSX > High Sierra disable additional security features
+        # that prevent multithreading
+        if ('OBJC_DISABLE_INITIALIZE_FORK_SAFETY' not in os.environ):
+            os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+        if (os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] != 'YES'):
+            os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+        LOGGER.info("Resettting environment. This can hang indefinitely on "
+                    "some systems. If this is the case, switch off "
+                    "multiprocessing by passing --serial")
+        exe = find_prog("nice-plots")
+        os.execve(exe, sys.argv, os.environ)
+
     LOGGER.info(f"Set configuration file path -> {ARGS.config_path}")
     LOGGER.info(f"Set data file path -> {ARGS.data_path}")
     LOGGER.info(f"Set codebook file path -> {ARGS.codebook_path}")
@@ -101,9 +109,9 @@ def main():
 
     LOGGER.info("Producing your plots please wait...")
     if ARGS.plot_type == 'bars':
-        barplot.make_plots(plotting_data, ctx, ARGS.parallel)
+        barplot.make_plots(plotting_data, ctx, ARGS.serial)
     elif ARGS.plot_type == 'lines':
-        lineplot.make_plots(plotting_data, ctx, ARGS.parallel)
+        lineplot.make_plots(plotting_data, ctx, ARGS.serial)
     else:
         raise Exception(f"Plotting type {ARGS.plot_type} does not exist.")
 
