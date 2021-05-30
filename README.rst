@@ -10,7 +10,7 @@ nice-plots allows to easily and automatically visualize survey data.
 Installation
 ============
 
-Open a terminal and clone the nice-plots recpository:
+Open a terminal and clone the nice-plots repository:
 
     $ git clone https://github.com/DZuercher/nice-plots.git
 
