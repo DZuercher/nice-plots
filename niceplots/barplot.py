@@ -1,8 +1,6 @@
 # Authors: Dominik Zuercher, Valeria Glauser
 
 import matplotlib.pyplot as plt
-import hyphen
-from hyphen.textwrap2 import fill
 import matplotlib.patches as mpatches
 import math
 import numpy as np

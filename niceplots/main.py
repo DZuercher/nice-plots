@@ -4,6 +4,7 @@ from niceplots import parser
 from niceplots import process
 from niceplots import barplot
 from niceplots import lineplot
+from niceplots import histogram
 from niceplots import utils
 import os
 import sys
@@ -58,7 +59,8 @@ def main():
                           "used instead of the codebook and config file "
                           "specified by the CLI.")
     cli_args.add_argument('--plot_type', type=str, action='store',
-                          default='bars', choices=['bars', 'lines'],
+                          default='bars', choices=['bars', 'lines',
+                                                   'histogram'],
                           help='Type of plots to produce')
     cli_args.add_argument('--serial', action='store_true',
                           default=False,
@@ -112,6 +114,8 @@ def main():
         barplot.make_plots(plotting_data, ctx, ARGS.serial)
     elif ARGS.plot_type == 'lines':
         lineplot.make_plots(plotting_data, ctx, ARGS.serial)
+    elif ARGS.plot_type == 'histogram':
+        histogram.make_plots(plotting_data, ctx, ARGS.serial)
     else:
         raise Exception(f"Plotting type {ARGS.plot_type} does not exist.")
 
