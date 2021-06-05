@@ -122,6 +122,8 @@ bar_pad: 1.5
 # Relative width of bars (1 = full bin width)
 rwidth: 0.8
 
+# The colors for the bars in the histograms. One per filter category
+histogram_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
 
 ############################################################
 # Only changes those attributes if it is really needed.

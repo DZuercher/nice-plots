@@ -115,16 +115,17 @@ def plot_histograms(xx, global_plotting_data, ctx):
     fig, ax = plt.subplots(figsize=figsize)
 
     n, bin_edges, _ = plt.hist(
-        histogram_data, bins=bins, orientation=u'horizontal', rwidth=ctx['rwidth'])
+        histogram_data, bins=bins, orientation=u'horizontal',
+        color=ctx['histogram_colors'][:len(list(plotting_data.keys()))],
+        rwidth=ctx['rwidth'])
     n = np.asarray(n)
     if len(list(n.shape)) == 1:
         n = n.reshape(1, -1)
 
     # get boffset of bars (from matplotib source code)
-    dr = np.clip(ctx['rwidth'], 0, 1)    
+    dr = np.clip(ctx['rwidth'], 0, 1)
     totwidth = np.diff(bin_edges)
     width = dr * totwidth / len(n)
-    dw = width
     boffset = -0.5 * dr * totwidth * (1 - 1 / len(n))
     boffset += 0.5 * totwidth
 
