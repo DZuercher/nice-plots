@@ -2,12 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import math
 import numpy as np
-from niceplots import barplot as plotting
-import frogress
-import os
 from niceplots import utils
-from multiprocessing import Pool
-from functools import partial
 
 LOGGER = utils.init_logger(__file__)
 
@@ -131,21 +126,18 @@ def plot_lineplots(xx, global_plotting_data, ctx):
                 d = d[d > 0]
 
             # add bin edges
-            if 'bins' in p_d['meta']['mapping']:
-                if p_d['meta']['mapping']['bins'][0] < 0:
-                    p_d['meta']['mapping']['bins'] = np.asarray(
-                        p_d['meta']['mapping']['bins'])
-                    p_d['meta']['mapping']['bins'] \
-                        -= p_d['meta']['mapping']['bins'][0]
-                edges = np.histogram(
-                    d, bins=p_d['meta']['mapping']['bins'])[1]
+            mapping = p_d['meta']['mapping']
+            if 'bins' in mapping:
+                if mapping['bins'][0] < 0:
+                    mapping['bins'] = np.asarray(mapping['bins'])
+                    mapping['bins'] -= mapping['bins'][0]
+                edges = np.histogram(d, bins=mapping['bins'])[1]
                 min_x = int(edges[0])
                 max_x = int(math.ceil(edges[-1]))
             else:
-                edges = np.asarray([p_d['meta']['mapping'][x]['code']
+                edges = np.asarray([mapping[x]['code']
                                     for x in range(
                     len(p_d['meta']['mapping']))])
-                # edges.append(edges[-1] + 1.)
 
             d = (d - edges[0]) / (edges[-1] - edges[0])
             edges = (edges - edges[0]) / (edges[-1] - edges[0])
@@ -160,7 +152,7 @@ def plot_lineplots(xx, global_plotting_data, ctx):
         xs[key] = x
 
         utils.add_questions(plotting_data[key], n_questions,
-                               positions, ax, ctx, -question_padding)
+                            positions, ax, ctx, -question_padding)
 
     # plot the lines
     for ii, key in enumerate(xs.keys()):
@@ -209,18 +201,3 @@ def plot_lineplots(xx, global_plotting_data, ctx):
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.pdf",
         bbox_inches='tight')
-
-
-def make_plots(global_plotting_data, ctx, serial):
-    if not serial:
-        LOGGER.info("Running in parallel mode")
-        with Pool() as p:
-            p.map(
-                partial(plot_lineplots,
-                        global_plotting_data=global_plotting_data, ctx=ctx),
-                list(range(len(global_plotting_data))))
-    else:
-        LOGGER.info("Running in serial mode")
-        # loop over question blocks and produce one plot for each question block
-        for xx, plotting_data in frogress.bar(enumerate(global_plotting_data)):
-            plot_lineplots(xx, global_plotting_data, ctx)

@@ -5,9 +5,6 @@ import matplotlib.patches as mpatches
 import math
 import numpy as np
 from niceplots import utils
-import frogress
-from multiprocessing import Pool
-from functools import partial
 import matplotlib as mpl
 
 LOGGER = utils.init_logger(__file__)
@@ -104,10 +101,6 @@ def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars):
     elif '' in [p_d['mapping'][xx]['label']
                 for xx in range(len(p_d['mapping']))]:
 
-        #box = mpl.transforms.Bbox.from_bounds(0.195, 0.05, 0.55, ctx['width'] / 3)
-        # cax = fig.add_axes(
-        #    fig.transFigure.inverted().transform_bbox(
-        #        ax.transAxes.transform_bbox(box)))
         cax = fig.add_axes(
             [0.25, 0.89, 0.5, ctx['width'] / num_bars])
         norm = mpl.colors.Normalize(vmin=0, vmax=len(p_d['mapping']) + 1)
@@ -272,18 +265,3 @@ def plot_barplots(xx, global_plotting_data, ctx):
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.pdf",
         bbox_inches='tight')
-
-
-def make_plots(global_plotting_data, ctx, serial):
-    if not serial:
-        LOGGER.info("Running in parallel mode")
-        with Pool() as p:
-            p.map(
-                partial(plot_barplots,
-                        global_plotting_data=global_plotting_data, ctx=ctx),
-                list(range(len(global_plotting_data))))
-    else:
-        LOGGER.info("Running in serial mode")
-        # loop over question blocks and produce one plot for each question block
-        for xx, plotting_data in frogress.bar(enumerate(global_plotting_data)):
-            plot_barplots(xx, global_plotting_data, ctx)

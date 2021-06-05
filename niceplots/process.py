@@ -148,10 +148,10 @@ def process_data(data, codebook, ctx):
 
                 # filter out no answers but add number of no answers to meta
                 if contains_no_answer:
-                    meta['no_answer'] = d[np.isclose(d,
-                                                    ctx['no_answer_code'])].size
-                    d = d[np.logical_not(np.isclose(d,
-                                                    ctx['no_answer_code']))]
+                    meta['no_answer'] = d[
+                        np.isclose(d, ctx['no_answer_code'])].size
+                    d = d[np.logical_not(
+                        np.isclose(d, ctx['no_answer_code']))]
 
                 p_d.append({'meta': meta, 'data': d})
 

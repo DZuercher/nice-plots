@@ -14,7 +14,7 @@ def isnumber(x):
     try:
         float(x)
         return True
-    except:
+    except ValueError:
         return False
 
 
@@ -25,7 +25,7 @@ def check_config(ctx, codebook, data):
     :param codebook: Codebook
     :param data: Data array
     """
-   # check that filters are correct
+    # check that filters are correct
     filters = ctx['filters']
 
     if len(filters.keys()) == 0:

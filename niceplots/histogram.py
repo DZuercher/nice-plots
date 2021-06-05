@@ -1,14 +1,8 @@
 # Authors: Dominik Zuercher, Valeria Glauser
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import math
 import numpy as np
 from niceplots import utils
-import frogress
-from multiprocessing import Pool
-from functools import partial
-import matplotlib as mpl
 
 LOGGER = utils.init_logger(__file__)
 
@@ -168,19 +162,3 @@ def plot_histograms(xx, global_plotting_data, ctx):
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.pdf",
         bbox_inches='tight')
-
-
-def make_plots(global_plotting_data, ctx, serial):
-    if not serial:
-        LOGGER.info("Running in parallel mode")
-        with Pool() as p:
-            p.map(
-                partial(plot_histograms,
-                        global_plotting_data=global_plotting_data, ctx=ctx),
-                list(range(len(global_plotting_data))))
-    else:
-        LOGGER.info("Running in serial mode")
-        # loop over question blocks and produce one plot
-        # for each question block
-        for xx, plotting_data in frogress.bar(enumerate(global_plotting_data)):
-            plot_histograms(xx, global_plotting_data, ctx)

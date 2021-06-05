@@ -7,11 +7,14 @@ from niceplots import lineplot
 from niceplots import histogram
 from niceplots import utils
 import os
+import frogress
 import sys
 import pathlib
 import argparse
 import platform
 import subprocess
+from multiprocessing import Pool
+from functools import partial
 
 
 def is_tool(name):
@@ -31,7 +34,6 @@ def find_prog(prog):
         p = subprocess.Popen([cmd, prog], stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = p.communicate()
-        rc = p.returncode
         return output.decode('utf-8').rstrip()
 
 
@@ -60,7 +62,7 @@ def main():
                           "specified by the CLI.")
     cli_args.add_argument('--plot_type', type=str, action='store',
                           default='bars', choices=['bars', 'lines',
-                                                   'histogram'],
+                                                   'histograms'],
                           help='Type of plots to produce')
     cli_args.add_argument('--serial', action='store_true',
                           default=False,
@@ -118,6 +120,27 @@ def main():
         histogram.make_plots(plotting_data, ctx, ARGS.serial)
     else:
         raise Exception(f"Plotting type {ARGS.plot_type} does not exist.")
+
+    if ARGS.plot_type == 'bars':
+        exec_func = getattr(barplot, 'plot_barplots')
+    elif ARGS.plot_type == 'lines':
+        exec_func = getattr(lineplot, 'plot_lineplots')
+    elif ARGS.plot_type == 'histograms':
+        exec_func = getattr(histogram, 'plot_histograms')
+    else:
+        raise Exception(f"Plot type {ARGS.plot_type} does not exist.")
+    if not ARGS.serial:
+        LOGGER.info("Running in parallel mode")
+        with Pool() as p:
+            p.map(
+                partial(exec_func, plotting_data, ctx=ctx),
+                list(range(len(plotting_data))))
+    else:
+        LOGGER.info("Running in serial mode")
+        # loop over question blocks and produce one plot for each
+        # question block
+        for xx, plotting_data in frogress.bar(enumerate(plotting_data)):
+            exec_func(xx, plotting_data, ctx)
 
     LOGGER.info("nice-plots finished without errors :)")
 
