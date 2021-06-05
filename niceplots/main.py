@@ -109,18 +109,9 @@ def main():
     parser.check_config(ctx, codebook, data)
 
     LOGGER.info("Processing input data...")
-    plotting_data = process.process_data(data, codebook, ctx)
+    global_plotting_data = process.process_data(data, codebook, ctx)
 
     LOGGER.info("Producing your plots please wait...")
-    if ARGS.plot_type == 'bars':
-        barplot.make_plots(plotting_data, ctx, ARGS.serial)
-    elif ARGS.plot_type == 'lines':
-        lineplot.make_plots(plotting_data, ctx, ARGS.serial)
-    elif ARGS.plot_type == 'histogram':
-        histogram.make_plots(plotting_data, ctx, ARGS.serial)
-    else:
-        raise Exception(f"Plotting type {ARGS.plot_type} does not exist.")
-
     if ARGS.plot_type == 'bars':
         exec_func = getattr(barplot, 'plot_barplots')
     elif ARGS.plot_type == 'lines':
@@ -129,18 +120,19 @@ def main():
         exec_func = getattr(histogram, 'plot_histograms')
     else:
         raise Exception(f"Plot type {ARGS.plot_type} does not exist.")
+
     if not ARGS.serial:
         LOGGER.info("Running in parallel mode")
         with Pool() as p:
             p.map(
-                partial(exec_func, plotting_data, ctx=ctx),
-                list(range(len(plotting_data))))
+                partial(exec_func, global_plotting_data, ctx=ctx),
+                list(range(len(global_plotting_data))))
     else:
         LOGGER.info("Running in serial mode")
         # loop over question blocks and produce one plot for each
         # question block
-        for xx, plotting_data in frogress.bar(enumerate(plotting_data)):
-            exec_func(xx, plotting_data, ctx)
+        for xx, plotting_data in frogress.bar(enumerate(global_plotting_data)):
+            exec_func(xx, global_plotting_data, ctx)
 
     LOGGER.info("nice-plots finished without errors :)")
 
