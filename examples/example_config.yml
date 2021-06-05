@@ -54,6 +54,7 @@ no_answer_code : 99
 #filters : {'Group 1' : 'VAR01 == 1', 'Others' : 'VAR01 >= 2'}
 filters : {}
 
+############################################################
 # You might want to change some of the following attributes.
 ############################################################
 
@@ -65,9 +66,6 @@ fontsize : 15
 
 # fontsize for stats
 fontsize_stats : 12
-
-# default colorscheme
-color_scheme : 'RdYlGn'
 
 # If True the label categories are plotted from largest to smallest.
 invert : False
@@ -82,14 +80,12 @@ unit : ''
 # Distance between labels and question text.
 padding : 0.3
 
-# Filter category colors for lineplots
-lineplot_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
 
-# Only changes those attributes if it is really needed.
+# BARPLOT OPTIONS
 ############################################################
 
-# Total plot width in inches
-plot_width : 8
+# default colorscheme
+color_scheme : 'RdYlGn'
 
 # Height of each question block in the plots
 plot_height_per_question : 2
@@ -105,3 +101,31 @@ major_dist : 0.1
 
 # Color of the numbers in the bars
 bar_text_color: 'black'
+
+
+# LINEPLOTS OPTIONS
+############################################################
+
+# Filter category colors for lineplots
+lineplot_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
+
+
+# HISTOGRAMS
+############################################################
+
+# Distance between labels and plot axis
+histogram_padding: 20
+
+# Distance between bar and value labels
+bar_pad: 1.5
+
+# Relative width of bars (1 = full bin width)
+rwidth: 0.8
+
+
+############################################################
+# Only changes those attributes if it is really needed.
+############################################################
+
+# Total plot width in inches
+plot_width : 8
