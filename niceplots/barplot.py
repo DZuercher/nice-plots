@@ -263,5 +263,5 @@ def plot_barplots(xx, global_plotting_data, ctx):
 
     # save plot
     fig.savefig(
-        f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.pdf",
+        f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.{ctx['format']}",
         bbox_inches='tight')

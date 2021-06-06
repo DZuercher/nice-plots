@@ -20,6 +20,7 @@ def test_lineplots():
     pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
 
     ctx = parser.load_config(config_path, output_directory, output_name)
+    ctx['format'] = 'svg'
     codebook = parser.load_codebook(ctx, codebook_path)
     data = parser.load_data(ctx, data_path, codebook)
 

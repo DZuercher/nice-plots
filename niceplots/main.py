@@ -68,6 +68,9 @@ def main():
                           default=False,
                           help='If True nice-plots runs in serial mode '
                           'instead of parallel.')
+    cli_args.add_argument('--format', type=str, action='store',
+                          default='pdf', choices=['pdf', 'svg', 'png'],
+                          help='Format of the output plots.')
 
     LOGGER.info("Starting nice-plots")
 
@@ -99,6 +102,7 @@ def main():
     ctx = parser.load_config(ARGS.config_path,
                              output_directory,
                              ARGS.output_name)
+    ctx['format'] = ARGS.format
 
     LOGGER.info("Loading codebook...")
     codebook = parser.load_codebook(ctx, ARGS.codebook_path)

@@ -20,6 +20,7 @@ def test_histograms():
     pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
 
     ctx = parser.load_config(config_path, output_directory, output_name)
+    ctx['format'] = 'svg'
     codebook = parser.load_codebook(ctx, codebook_path)
     data = parser.load_data(ctx, data_path, codebook)
 
@@ -27,7 +28,7 @@ def test_histograms():
 
     for xx, plotting_data in enumerate(global_plotting_data):
         exec_func(xx, global_plotting_data, ctx)
-        if xx == 0:
+        if xx == 5:
             break
 
     shutil.rmtree(output_directory)
