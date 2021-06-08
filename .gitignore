@@ -1,6 +1,9 @@
 # example output folder
 examples/output1
 
+# cache
+cache
+
 *.py[cod]
 
 # C extensions

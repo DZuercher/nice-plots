@@ -94,6 +94,10 @@ def main():
     LOGGER.info(f"Set data file path -> {ARGS.data_path}")
     LOGGER.info(f"Set codebook file path -> {ARGS.codebook_path}")
 
+    # create cache directory
+    cache_directory = os.path.expanduser("~/.cache/nice-plots")
+    pathlib.Path(cache_directory).mkdir(parents=True, exist_ok=True)
+
     # create output directory
     output_directory = os.getcwd() + "/{}".format(ARGS.output_name)
     pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)

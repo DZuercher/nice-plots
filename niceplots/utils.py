@@ -59,15 +59,30 @@ def get_render_size(object, ctx):
     :param ctx: Configuration instance
     :return : Width of text
     """
-    figsize = (ctx['plot_width'], 10)
-    f = plt.figure(figsize=figsize)
-    rend = f.canvas.get_renderer()
-    t = plt.text(0.5, 0.5, object, fontsize=ctx['fontsize'])
-    extent = t.get_window_extent(renderer=rend)
-    ax = f.gca()
-    extent = extent.transformed(ax.transAxes.inverted())
-    plt.close(f)
-    return np.abs(extent.width)
+
+    # load cache
+    cache_file = os.path.expanduser('~/.cache/nice-plots/object_render_sizes.npy')
+    if os.path.exists(cache_file):
+        cache = np.load(cache_file)
+    else:
+        cache = np.asarray([['', 0]], dtype=('str', 'int'))
+
+    if object in cache[:, 0]:
+        width = cache[cache[:, 0] == object, 1]
+        width = float(width)
+    else:
+        figsize = (ctx['plot_width'], 10)
+        f = plt.figure(figsize=figsize)
+        rend = f.canvas.get_renderer()
+        t = plt.text(0.5, 0.5, object, fontsize=ctx['fontsize'])
+        extent = t.get_window_extent(renderer=rend)
+        ax = f.gca()
+        extent = extent.transformed(ax.transAxes.inverted())
+        plt.close(f)
+        width = np.abs(extent.width)
+        cache = np.vstack((cache, [[object, width]]))
+        np.save(cache_file, cache)
+    return width
 
 
 def get_question_size(plotting_data, ctx):

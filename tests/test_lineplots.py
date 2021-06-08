@@ -16,6 +16,10 @@ def test_lineplots():
 
     output_name = 'test_lineplots'
 
+    # create cache directory
+    cache_directory = os.path.expanduser("~/.cache/nice-plots")
+    pathlib.Path(cache_directory).mkdir(parents=True, exist_ok=True)
+
     output_directory = os.path.dirname(__file__) + '/' + output_name
     pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
 
