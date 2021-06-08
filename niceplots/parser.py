@@ -191,6 +191,7 @@ def check_data(data, ctx, codebook):
                    "your data. Setting them to NaN.")
     data = data[string_filter]
     data = data.applymap(float)
+    return data
 
 
 def load_codebook(ctx, codebook_path):
@@ -259,5 +260,5 @@ def load_data(ctx, data_path, codebook):
     # potentially some pre-processing
     data = raw_data
 
-    check_data(data, ctx, codebook)
+    data = check_data(data, ctx, codebook)
     return data
