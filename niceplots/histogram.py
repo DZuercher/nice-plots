@@ -136,11 +136,12 @@ def plot_histograms(xx, global_plotting_data, ctx):
     for jj, nn in enumerate(n):
         for ii, nnn in enumerate(nn):
             if nnn > 0:
-                max_value = np.max([max_value, nnn + ctx['bar_pad']])
-                ax.text(nnn + ctx['bar_pad'],
-                        bin_edges[ii] + boffset[ii] + jj * width[ii], int(nnn),
-                        va='center', ha='right', fontsize=ctx['fontsize'])
-
+                max_value = np.max(
+                    [max_value, utils.get_render_size(f' {int(nnn)} ', ctx)])
+                ax.text(nnn,
+                        bin_edges[ii] + boffset[ii] + jj * width[ii],
+                        f' {int(nnn)}',
+                        va='center', ha='left', fontsize=ctx['fontsize'])
 
     # very hacky way to assure that the plots all have same witdth
     mean_label_tick = np.mean(label_ticks)
@@ -172,7 +173,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
     ax.text(xlim_up * 29. / 30., bin_edges[-1] + np.sum(totwidth) / 15.,
             stats, fontsize=ctx['fontsize_stats'], ha='right', va='center')
 
-    ax.set_xlim([0, max_value * 1.01])
+    ax.set_xlim([0, max_value])
     ax.set_ylim([ylim_low, bin_edges[-1] + np.sum(totwidth) / 8.])
 
     # save plot

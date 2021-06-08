@@ -117,7 +117,7 @@ lineplot_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
 histogram_padding: 20
 
 # Distance between bar and value labels
-bar_pad: 1.5
+bar_pad: 1.5 # Not applied anymore!!
 
 # Relative width of bars (1 = full bin width)
 rwidth: 0.8
