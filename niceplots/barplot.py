@@ -39,9 +39,9 @@ def plot_nice_bar(ax, plotting_data, positions, ctx):
         else:
             hist = np.bincount(d)
             hist = hist[1:]
-        if p_d['meta']['invert'] == 'True':
-            # flip order of bins
-            hist = np.flip(hist)
+        # if p_d['meta']['invert'] == 'True':
+        #     # flip order of bins
+        #     hist = np.flip(hist)
         # ignore first bin (zero values)
         results.append(hist)
         results_cum.append(np.cumsum(hist))
@@ -55,6 +55,8 @@ def plot_nice_bar(ax, plotting_data, positions, ctx):
         plotting_data[0]['meta']['color_scheme'])(np.linspace(
             0.15, 0.85, n_categories))
     all_category_colors = np.asarray(all_category_colors)
+    if p_d['meta']['invert'] == 'True':
+        all_category_colors = np.flip(all_category_colors)
 
     # loop over questions in block and produce one bar each
     for i in range(len(results)):
