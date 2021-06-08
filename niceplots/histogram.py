@@ -132,12 +132,14 @@ def plot_histograms(xx, global_plotting_data, ctx):
     boffset = -0.5 * dr * totwidth * (1 - 1 / len(n))
     boffset += 0.5 * totwidth
 
+    max_value = 0
     for jj, nn in enumerate(n):
         for ii, nnn in enumerate(nn):
             if nnn > 0:
+                max_value = np.max([max_value, nnn + ctx['bar_pad']])
                 ax.text(nnn + ctx['bar_pad'],
                         bin_edges[ii] + boffset[ii] + jj * width[ii], int(nnn),
-                        va='center', ha='left', fontsize=ctx['fontsize'])
+                        va='center', ha='right', fontsize=ctx['fontsize'])
 
 
     # very hacky way to assure that the plots all have same witdth
@@ -149,7 +151,6 @@ def plot_histograms(xx, global_plotting_data, ctx):
     ax.set_yticklabels(labels, fontsize=ctx['fontsize'])
     ax.tick_params(axis='both', length=0, pad=ctx['histogram_padding'])
     ax.set_xticks([])
-    ax.set_xlim([0, np.max(n) * 1.1])
 
     # add stats
     N = 0
@@ -170,6 +171,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
     ax.text(xlim_up * 29. / 30., bin_edges[-1] + np.sum(totwidth) / 15.,
             stats, fontsize=ctx['fontsize_stats'], ha='right', va='center')
 
+    ax.set_xlim([0, max_value * 1.01])
     ax.set_ylim([ylim_low, bin_edges[-1] + np.sum(totwidth) / 8.])
 
     # save plot
