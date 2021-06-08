@@ -8,6 +8,15 @@ LOGGER = utils.init_logger(__file__)
 
 
 def plot_histograms(xx, global_plotting_data, ctx):
+    # get longest question
+    question = ''
+    for p_d in global_plotting_data:
+        p = p_d[list(p_d.keys())[0]]
+        for p_ in p:
+            if len(p_['meta']['question']) > len(question):
+                question = p_['meta']['question']
+    longest_question = [' '] * len(question)
+
     plotting_data = global_plotting_data[xx]
 
     n_questions = len(plotting_data[list(plotting_data.keys())[0]])
@@ -130,6 +139,11 @@ def plot_histograms(xx, global_plotting_data, ctx):
                         bin_edges[ii] + boffset[ii] + jj * width[ii], int(nnn),
                         va='center', ha='left', fontsize=ctx['fontsize'])
 
+
+    # very hacky way to assure that the plots all have same witdth
+    mean_label_tick = np.mean(label_ticks)
+    label_ticks.append(mean_label_tick)
+    labels.append(longest_question)
     # put tick labels
     ax.set_yticks(label_ticks)
     ax.set_yticklabels(labels, fontsize=ctx['fontsize'])

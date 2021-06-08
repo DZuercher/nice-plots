@@ -68,7 +68,7 @@ def get_meta(var_idx, ctx, data, codebook):
     return meta, contains_no_answer
 
 
-def parse_filter_functions(data, ctx):
+def parse_filter_functions(data, codebook, ctx):
     """
     Extract filter expressions from config file.
     Convert to boolean filters and list of filter names.
@@ -86,11 +86,10 @@ def parse_filter_functions(data, ctx):
         for f_name in list(filters.keys()):
             f_names.append(f_name)
             f = filters[f_name]
-            var = f.split(' ')[0].strip()
-            op = f.split(' ')[1].strip()
-            val = f.split(' ')[2].strip()
-            exp = f'np.asarray(data["{var}"]) {op} {val}'
-            idx = eval(exp)
+            for var in codebook[ctx['name_label']]:
+                if var in f:
+                    f.replace(var, f"np.asarray(data['{var}'])")
+            idx = eval(f)
             fs.append(idx)
         return (f_names, fs)
 
@@ -98,7 +97,7 @@ def parse_filter_functions(data, ctx):
 def process_data(data, codebook, ctx):
     LOGGER.info("Preprocessing data for plotting.")
     category_labels, categories = parse_filter_functions(
-        data, ctx)
+        data, codebook, ctx)
 
     block_id_label = ctx['block_id_label']
     # check if exists

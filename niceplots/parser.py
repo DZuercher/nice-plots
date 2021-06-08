@@ -33,12 +33,12 @@ def check_config(ctx, codebook, data):
     else:
         for f_name in list(filters.keys()):
             f = filters[f_name]
-            var = f.split(' ')[0].strip()
-            op = f.split(' ')[1].strip()
-            val = f.split(' ')[2].strip()
-            exp = f'np.asarray(data["{var}"]) {op} {val}'
+            # attempt to replace all variable names
+            for var in codebook[ctx['name_label']]:
+                if var in f:
+                    f.replace(var, f"np.asarray(data['{var}'])")
             try:
-                eval(exp)
+                eval(f)
             except KeyError:
                 raise Exception(
                     f"Unable to process filter entry {f}. "
