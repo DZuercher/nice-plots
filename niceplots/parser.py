@@ -32,13 +32,31 @@ def check_config(ctx, codebook, data):
         pass
     else:
         for f_name in list(filters.keys()):
-            f = filters[f_name]
-            var = f.split(' ')[0].strip()
-            op = f.split(' ')[1].strip()
-            val = f.split(' ')[2].strip()
-            exp = f'np.asarray(data["{var}"]) {op} {val}'
             try:
-                eval(exp)
+                f = filters[f_name]
+                while 1:
+                    first_and = f.find('&')
+                    first_or = f.find('|')
+                    next = np.min([first_and, first_or])
+                    if next > -1:
+                        ff = f[:next]
+                    else:
+                        ff = f[:]
+                    ff = ff.strip()
+                    print(f, next)
+                    print(ff)
+                    if (ff[0] == '(') & (ff[-1] == ')'):
+                        # assuming expression to be in bracket
+                        ff = ff.strip()[1:-1]
+                    var = ff.split(' ')[0].strip()
+                    op = ff.split(' ')[1].strip()
+                    val = ff.split(' ')[2].strip()
+                    exp = f'np.asarray(data["{var}"]) {op} {val}'
+                    eval(exp)
+                    if next < 0:
+                        # reached end
+                        break
+                    f = ff[next + 1:]
             except KeyError:
                 raise Exception(
                     f"Unable to process filter entry {f}. "
@@ -191,6 +209,7 @@ def check_data(data, ctx, codebook):
                    "your data. Setting them to NaN.")
     data = data[string_filter]
     data = data.applymap(float)
+    return data
 
 
 def load_codebook(ctx, codebook_path):
@@ -259,5 +278,5 @@ def load_data(ctx, data_path, codebook):
     # potentially some pre-processing
     data = raw_data
 
-    check_data(data, ctx, codebook)
+    data = check_data(data, ctx, codebook)
     return data

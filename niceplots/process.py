@@ -86,11 +86,19 @@ def parse_filter_functions(data, ctx):
         for f_name in list(filters.keys()):
             f_names.append(f_name)
             f = filters[f_name]
-            var = f.split(' ')[0].strip()
-            op = f.split(' ')[1].strip()
-            val = f.split(' ')[2].strip()
-            exp = f'np.asarray(data["{var}"]) {op} {val}'
-            idx = eval(exp)
+            fs = f.split('|').split('&')
+            idxs = []
+            for ff in fs:
+                ff = ff.strip()
+                if (ff[0] == '(') & (ff[-1] == ')'):
+                    # assuming expression to be in bracket
+                    ff = ff.strip()[1:-1]
+                var = ff.split(' ')[0].strip()
+                op = ff.split(' ')[1].strip()
+                val = ff.split(' ')[2].strip()
+                exp = f'np.asarray(data["{var}"]) {op} {val}'
+                idxs.append(eval(exp))
+            
             fs.append(idx)
         return (f_names, fs)
 
