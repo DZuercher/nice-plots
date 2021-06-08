@@ -15,7 +15,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
         for p_ in p:
             if len(p_['meta']['question']) > len(question):
                 question = p_['meta']['question']
-    longest_question = [' '] * len(question)
+    longest_question = ' ' * len(question)
 
     plotting_data = global_plotting_data[xx]
 
@@ -144,8 +144,9 @@ def plot_histograms(xx, global_plotting_data, ctx):
 
     # very hacky way to assure that the plots all have same witdth
     mean_label_tick = np.mean(label_ticks)
-    label_ticks.append(mean_label_tick)
-    labels.append(longest_question)
+    label_ticks = np.append(label_ticks, mean_label_tick)
+    labels = np.append(labels, longest_question)
+
     # put tick labels
     ax.set_yticks(label_ticks)
     ax.set_yticklabels(labels, fontsize=ctx['fontsize'])
