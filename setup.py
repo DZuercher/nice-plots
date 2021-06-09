@@ -18,7 +18,7 @@ PACKAGE_PATH = os.path.abspath(os.path.join(__file__, os.pardir))
 
 setup(
     name="nice-plots",
-    version="0.1.0",
+    version="0.2.0",
     description="Automated generation of plots for survey data",
     long_description=open('README.rst').read(),
     author="Dominik Zuercher, Valeria Glauser",

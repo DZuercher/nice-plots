@@ -23,9 +23,9 @@ def add_questions(p_d, n_questions, positions, ax, ctx, dist):
     ax.set_yticks(np.arange(n_questions))
 
 
-def get_question_padding(ctx, global_plotting_data):
+def get_question_padding(ctx, global_plotting_data, pad):
     question_padding = utils.get_question_size(global_plotting_data, ctx)
-    question_padding += ctx['padding']
+    question_padding += pad
     label_width = 0
     for ii in range(len(global_plotting_data)):
         cat_labels_key = list(global_plotting_data[ii].keys())[0]
@@ -87,16 +87,39 @@ def add_stats(ax, plotting_data, positions, ctx):
 
 def plot_lineplots(xx, global_plotting_data, ctx):
     lineplot_colors = ctx['lineplot_colors']
-    question_padding = get_question_padding(ctx, global_plotting_data)
 
     plotting_data = global_plotting_data[xx]
     # loop over question blocks and produce one plot for each question block
     n_questions = len(plotting_data[list(plotting_data.keys())[0]])
 
+    # init figure
+    fig, ax = plt.subplots()
+    dpi = fig.dpi
+
+    y_size_in_inches = n_questions * ctx['line_plot_height']
+    y_size_in_inches += (n_questions - 1) * ctx['line_plot_dist']
+
     # initialize canvas
-    y_size = n_questions
-    figsize = (ctx['plot_width'], ctx['plot_height_per_question'] * y_size)
+    figsize = (ctx['plot_width'], y_size_in_inches)
     fig, ax = plt.subplots(figsize=figsize)
+
+    # get plot height and distances in data coordinates
+    zero_point = ax.transAxes.inverted().transform((0, 0))
+    height = (ax.transAxes.inverted().transform(
+        (0, ctx['line_plot_height'] * dpi)) - zero_point)[1]
+    dist = (ax.transAxes.inverted().transform(
+        (0, ctx['line_plot_dist'] * dpi)) - zero_point)[1]
+    label_pad = (ax.transAxes.inverted().transform(
+        (ctx['line_plot_padding'] * dpi, 0)) - zero_point)[0]
+    pad = (ax.transAxes.inverted().transform(
+        (ctx['line_plot_label_padding'] * dpi, 0)) - zero_point)[0]
+    height = np.abs(height)
+    dist = np.abs(dist)
+    label_pad = np.abs(label_pad)
+    pad = np.abs(pad)
+
+    question_padding = get_question_padding(ctx, global_plotting_data,
+                                            label_pad + pad)
 
     # loop over filter categories
     xs = {}
@@ -105,8 +128,7 @@ def plot_lineplots(xx, global_plotting_data, ctx):
     # loop over filter categories
     for ii, key in enumerate(plotting_data.keys()):
         # get y axis posistions of the bars of this category
-        offset = ctx['dist']
-        positions = [offset + xx * ctx['plot_height_per_question']
+        positions = [xx * (height + dist) + height / 2.
                      for xx in range(n_questions)]
         ys[key] = positions
 
@@ -115,7 +137,7 @@ def plot_lineplots(xx, global_plotting_data, ctx):
         for jj, p_d in enumerate(plotting_data[key]):
 
             # draw lines
-            ax.axhline(positions[jj], c='k', lw=3)
+            ax.hlines(positions[jj], xmin=0, xmax=1, color='k', lw=3)
 
             d = p_d['data'][np.logical_not(
                 np.isnan(p_d['data']))]
@@ -142,21 +164,30 @@ def plot_lineplots(xx, global_plotting_data, ctx):
             d = (d - edges[0]) / (edges[-1] - edges[0])
             edges = (edges - edges[0]) / (edges[-1] - edges[0])
 
+            # plot the lines
             for edge in edges:
-                ax.vlines(
-                    edge, ymin=positions[jj] - 0.6,
-                    ymax=positions[jj] + 0.6, color='k', lw=3)
+                if p_d['meta']['invert'] == 'True':
+                    ax.vlines(
+                        1. - edge, ymin=positions[jj] - height / 2.,
+                        ymax=positions[jj] + height / 2., color='k', lw=3)
+                else:
+                    ax.vlines(
+                        edge, ymin=positions[jj] - height / 2.,
+                        ymax=positions[jj] + height / 2., color='k', lw=3)
 
             mean = np.mean(d)
+            if p_d['meta']['invert'] == 'True':
+                mean = 1. - mean
+
             x = np.append(x, mean)
         xs[key] = x
 
         utils.add_questions(plotting_data[key], n_questions,
                             positions, ax, ctx, -question_padding)
 
-    # plot the lines
+    # plot the markers
     for ii, key in enumerate(xs.keys()):
-        ax.plot(xs[key], ys[key], marker='X', markersize=25,
+        ax.plot(xs[key], ys[key], marker='X', markersize=20,
                 color=lineplot_colors[ii], lw=3)
 
     label_key = list(plotting_data.keys())[0]
@@ -164,33 +195,35 @@ def plot_lineplots(xx, global_plotting_data, ctx):
     ylabels = [[], []]
     for p_d in labels:
         try:
-            ylabels[0].append(p_d['meta']['mapping'][0]['label'])
-            ylabels[1].append(p_d['meta']['mapping'][-1]['label'])
+            if p_d['meta']['invert'] == 'True':
+                ylabels[1].append(p_d['meta']['mapping'][0]['label'])
+                ylabels[0].append(p_d['meta']['mapping'][-1]['label'])
+            else:
+                ylabels[0].append(p_d['meta']['mapping'][0]['label'])
+                ylabels[1].append(p_d['meta']['mapping'][-1]['label'])
         except KeyError:
-            ylabels[0].append(min_x)
-            ylabels[1].append(max_x)
+            if p_d['meta']['invert'] == 'True':
+                ylabels[1].append(min_x)
+                ylabels[0].append(max_x)
+            else:
+                ylabels[0].append(min_x)
+                ylabels[1].append(max_x)
 
-    # y axis
+    # y axis labels
     for ii in range(len(ylabels[0])):
-        ax.text(-0.08, positions[ii], ylabels[0][ii],
+        ax.text(-pad, positions[ii], ylabels[0][ii],
                 fontsize=ctx['fontsize'], va='center', ha='right')
     for ii in range(len(ylabels[1])):
-        ax.text(1.08, positions[ii], ylabels[1][ii],
+        ax.text(1. + pad, positions[ii], ylabels[1][ii],
                 fontsize=ctx['fontsize'], va='center')
+
+    # add_stats(ax, plotting_data, positions, ctx)
 
     # x axis
     ax.set_xticks([])
     ax.set_xticklabels([])
-    # ax.set_xlim(-0.05, 1.05)
-    ax.set_xlim(-0.005, 1.005)
+    ax.set_xlim(-0.05, 1.05)
 
-    # leave 1 dist from top and bottom border
-    ymax = -np.inf
-    ymin = np.inf
-
-    for ii, key in enumerate(ys.keys()):
-        ymin = np.max([ymin, np.min(ys[key])])
-        ymax = np.max([ymax, np.max(ys[key])])
     ax.invert_yaxis()
     ax.axis('off')
 

@@ -199,7 +199,7 @@ def get_label_width(plotting_data, ctx):
     return label_width
 
 
-def get_question_padding(ctx, global_plotting_data):
+def get_question_padding(ctx, global_plotting_data, pad):
     """
     Get distance between question and category labels.
     :param ctx: Configuration instance
@@ -207,14 +207,13 @@ def get_question_padding(ctx, global_plotting_data):
     :return : padding distance
     """
     question_padding = utils.get_question_size(global_plotting_data, ctx)
-    question_padding += ctx['padding']
+    question_padding += pad
     question_padding += get_label_width(global_plotting_data, ctx)
     return question_padding
 
 
 def plot_barplots(xx, global_plotting_data, ctx):
     plotting_data = global_plotting_data[xx]
-    question_padding = get_question_padding(ctx, global_plotting_data)
 
     # init figure
     fig, ax = plt.subplots()
@@ -240,9 +239,15 @@ def plot_barplots(xx, global_plotting_data, ctx):
         (0, ctx['dist'] * dpi)) - zero_point)[1]
     major_dist = (ax.transAxes.inverted().transform(
         (0, ctx['major_dist'] * dpi)) - zero_point)[1]
+    label_pad = (ax.transAxes.inverted().transform(
+        (ctx['padding'] * dpi, 0)) - zero_point)[0]
     height = np.abs(height)
     dist = np.abs(dist)
+    label_pad = np.abs(label_pad)
     major_dist = np.abs(major_dist)
+
+    question_padding = get_question_padding(
+        ctx, global_plotting_data, label_pad)
 
     # distance between bars of same category
     distance = major_dist + dist * (n_categories - 1) + n_categories * height
