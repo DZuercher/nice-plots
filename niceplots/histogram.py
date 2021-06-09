@@ -7,6 +7,23 @@ from niceplots import utils
 LOGGER = utils.init_logger(__file__)
 
 
+def get_max_question_width(global_plotting_data, ctx):
+    """
+    Returns width of category label.
+    :param plotting_data: Plotting data
+    :param ctx: Configuration instance
+    :return : Width of label
+    """
+    label_width = 0
+    key0 = list(global_plotting_data[0].keys())[0]
+    for p_d in global_plotting_data:
+        for qq in p_d[key0]:
+            q = qq['meta']['question']
+            extent = utils.get_render_size(utils.wrap_text(q), ctx)
+            label_width = np.max([label_width, extent])
+    return label_width
+
+
 def plot_histograms(xx, global_plotting_data, ctx):
     # get longest question
     question = ''
@@ -139,34 +156,51 @@ def plot_histograms(xx, global_plotting_data, ctx):
     ax.set_xlim(xlims)
     ax.set_ylim(ylims)
 
+    max_question_width = get_max_question_width(global_plotting_data, ctx)
+    max_question_width = (
+        ax.transLimits.inverted().transform((max_question_width, 0))
+        - ax.transLimits.inverted().transform((0, 0)))[0]
+
+    # distance between bars and their labels
+    dpi = fig.dpi
+    zero_point = ax.transData.inverted().transform((0, 0))
+    bar_label_pad = (ax.transData.inverted().transform(
+        (ctx['bar_pad'] * dpi, 0)) - zero_point)[0]
+
     max_value = 0
-    axis_to_data = ax.transAxes + ax.transData.inverted()
     for jj, nn in enumerate(n):
         for ii, nnn in enumerate(nn):
             if nnn > 0:
-                label_size = ax.transLimits.inverted().transform(
-                [(utils.get_render_size(f' {int(nnn)} ', ctx), 0)])[0][0]
+                bar_label_size = utils.get_render_size(str(int(nnn)), ctx)
+                bar_label_size = (ax.transLimits.inverted().transform(
+                    (bar_label_size, 0)) - ax.transLimits.inverted().transform(
+                    (0, 0)))[0]
 
                 max_value = np.max(
-                    [max_value, nnn + label_size])
-                ax.text(nnn,
+                    [max_value, nnn + bar_label_size + 2 * bar_label_pad])
+                ax.text(nnn + bar_label_pad,
                         bin_edges[ii] + boffset[ii] + jj * width[ii],
-                        f' {int(nnn)}',
+                        str(int(nnn)),
                         va='center', ha='left', fontsize=ctx['fontsize'])
 
-    # very hacky way to assure that the plots all have same witdth
     mean_label_tick = np.mean(label_ticks)
-    label_ticks = np.append(label_ticks, mean_label_tick)
-    labels = np.append(labels, longest_question)
 
     # put tick labels
     # wrap labels
     for ii in range(len(labels)):
         labels[ii] = utils.wrap_text(labels[ii])
-    ax.set_yticks(label_ticks)
-    ax.set_yticklabels(labels, fontsize=ctx['fontsize'])
+
+    pad = (ax.transData.inverted().transform(
+        (ctx['histogram_padding'] * dpi, 0))
+        - ax.transData.inverted().transform((0, 0)))[0]
+    for ii in range(len(label_ticks)):
+        ax.text(-np.abs(pad), label_ticks[ii], labels[ii],
+                ha='right', va='center', fontsize=ctx['fontsize'])
     ax.tick_params(axis='both', length=0, pad=ctx['histogram_padding'])
     ax.set_xticks([])
+    ax.set_yticks([])
+
+    ax.text(-max_question_width - pad, mean_label_tick, ' ')
 
     # add stats
     N = 0
@@ -183,12 +217,20 @@ def plot_histograms(xx, global_plotting_data, ctx):
 
     ylim_low, ylim_up = ax.get_ylim()
     xlim_low, xlim_up = ax.get_xlim()
-
-    ax.text(xlim_up * 29. / 30., bin_edges[-1] + np.sum(totwidth) / 15.,
-            stats, fontsize=ctx['fontsize_stats'], ha='right', va='center')
-
     ax.set_xlim([0, max_value])
-    ax.set_ylim([ylim_low, bin_edges[-1] + np.sum(totwidth) / 8.])
+
+    stats_pos = ax.transData.inverted().transform(
+        (ctx['hist_stats_dist'], ctx['hist_stats_dist'])) \
+        - ax.transData.inverted().transform((0, 0))
+
+    ax.text(xlim_up - np.abs(stats_pos[0]), ylim_up,
+            stats, fontsize=ctx['fontsize_stats'], ha='right', va='bottom')
+    stats_height = utils.get_render_size(stats, ctx, x_size=False)
+    stats_height = (ax.transLimits.inverted().transform(
+        (0, stats_height)) - ax.transLimits.inverted().transform((0, 0)))[1]
+
+    ax.set_ylim([ylim_low,
+                 ylim_up + 2 * np.abs(stats_height) + np.abs(stats_pos[1])])
 
     # save plot
     fig.savefig(
