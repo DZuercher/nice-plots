@@ -51,8 +51,8 @@ no_answer_code : 99
 # and each filter follows the format: 'group name' : 'varibale operator value'
 # NOTE: The whitespaces matter!
 # Example:
-#filters : {'Group 1' : 'VAR01 == 1', 'Others' : 'VAR01 >= 2'}
-filters : {}
+filters : {'Group 1' : 'VAR01 == 1', 'Others' : 'VAR01 >= 2'}
+# filters : {}
 
 ############################################################
 # You might want to change some of the following attributes.
@@ -64,7 +64,7 @@ delimiter : ','
 # Global fontsize in plots
 fontsize : 15
 
-# fontsize for stats
+# fontsize for stats and legend
 fontsize_stats : 12
 
 # If True the label categories are plotted from largest to smallest.
@@ -87,17 +87,14 @@ padding : 0.3
 # default colorscheme
 color_scheme : 'RdYlGn'
 
-# Height of each question block in the plots
-plot_height_per_question : 2
-
 # Height of the bars in the plots
-width : 0.15 # y width of the bars
+height : 0.7 # in inches
 
 # Distance between bars for different categories within a question
-dist : 0.02
+dist : 0.3 # in inches
 
 # Distance between bars for different questions
-major_dist : 0.1
+major_dist : 1 # in inches
 
 # Color of the numbers in the bars
 bar_text_color: 'black'
@@ -117,7 +114,7 @@ lineplot_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
 histogram_padding: 20
 
 # Distance between bar and value labels
-bar_pad: 1.5
+bar_pad: 1.5 # Not applied anymore!!
 
 # Relative width of bars (1 = full bin width)
 rwidth: 0.8
@@ -129,5 +126,5 @@ histogram_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
 # Only changes those attributes if it is really needed.
 ############################################################
 
-# Total plot width in inches
-plot_width : 8
+# Total plot width (careful, changing this will change the aspect ratio!)
+plot_width : 8 # in inches
