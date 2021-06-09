@@ -13,7 +13,6 @@ def parse_mapping(data, mapping, var_name, ctx, nbins):
     """
     contains_no_answer = False
     if mapping.strip() == 'none':
-        nbins = ctx['nbins']
         ms = {'bins': np.linspace(
             np.min(data) - 0.5, np.max(data) + 0.5, nbins + 1)}
     else:
