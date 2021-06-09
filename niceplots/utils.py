@@ -127,7 +127,6 @@ def add_questions(p_d, n_questions, positions, ax, ctx, dist):
         lab = wrap_text(questions[nq])
         ax.text(dist, positions[nq], lab, va='center',
                 ha='left', fontsize=ctx['fontsize'])
-    ax.set_yticks(np.arange(n_questions))
 
 
 def wrap_text(text, width=60, lang='de_DE'):

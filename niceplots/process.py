@@ -87,7 +87,7 @@ def parse_filter_functions(data, codebook, ctx):
             f = filters[f_name]
             for var in codebook[ctx['name_label']]:
                 if var in f:
-                    f.replace(var, f"np.asarray(data['{var}'])")
+                    f = f.replace(var, 'np.asarray(data["{}"])'.format(var))
             idx = eval(f)
             fs.append(idx)
         return (f_names, fs)

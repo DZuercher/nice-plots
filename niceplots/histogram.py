@@ -160,6 +160,9 @@ def plot_histograms(xx, global_plotting_data, ctx):
     labels = np.append(labels, longest_question)
 
     # put tick labels
+    # wrap labels
+    for ii in range(len(labels)):
+        labels[ii] = utils.wrap_text(labels[ii])
     ax.set_yticks(label_ticks)
     ax.set_yticklabels(labels, fontsize=ctx['fontsize'])
     ax.tick_params(axis='both', length=0, pad=ctx['histogram_padding'])
