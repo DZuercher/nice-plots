@@ -117,7 +117,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
     figsize = (ctx['plot_width'], ctx['plot_width'])
     fig, ax = plt.subplots(figsize=figsize)
 
-    n, bin_edges, _ = plt.hist(
+    n, bin_edges, _ = ax.hist(
         histogram_data, bins=bins, orientation=u'horizontal',
         color=ctx['histogram_colors'][:len(list(plotting_data.keys()))],
         rwidth=ctx['rwidth'])
@@ -132,12 +132,23 @@ def plot_histograms(xx, global_plotting_data, ctx):
     boffset = -0.5 * dr * totwidth * (1 - 1 / len(n))
     boffset += 0.5 * totwidth
 
+    # need to explicitly set axes limits in order for data coordinates to be
+    # reset!
+    ylims = ax.get_ylim()
+    xlims = ax.get_xlim()
+    ax.set_xlim(xlims)
+    ax.set_ylim(ylims)
+
     max_value = 0
+    axis_to_data = ax.transAxes + ax.transData.inverted()
     for jj, nn in enumerate(n):
         for ii, nnn in enumerate(nn):
             if nnn > 0:
+                label_size = ax.transLimits.inverted().transform(
+                [(utils.get_render_size(f' {int(nnn)} ', ctx), 0)])[0][0]
+
                 max_value = np.max(
-                    [max_value, utils.get_render_size(f' {int(nnn)} ', ctx)])
+                    [max_value, nnn + label_size])
                 ax.text(nnn,
                         bin_edges[ii] + boffset[ii] + jj * width[ii],
                         f' {int(nnn)}',
