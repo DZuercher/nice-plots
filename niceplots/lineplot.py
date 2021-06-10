@@ -59,7 +59,8 @@ def add_legend(plotting_data, colors, ctx):
                    # no more than 2, otherwise might be longer than plot
                    # ncol=math.ceil(len(filter_categories) / 2),
                    bbox_to_anchor=(0, 1),
-                   loc='lower left', frameon=False, fontsize=ctx['fontsize'])
+                   loc='lower left', frameon=False,
+                   fontsize=ctx['fontsize_stats'])
 
 
 def add_stats(ax, plotting_data, positions, ctx):
