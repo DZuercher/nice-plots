@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from niceplots import utils
+from niceplots import lineplot
 
 LOGGER = utils.init_logger(__file__)
 
@@ -26,13 +27,13 @@ def get_max_question_width(global_plotting_data, ctx):
 
 def plot_histograms(xx, global_plotting_data, ctx):
     # get longest question
-    question = ''
-    for p_d in global_plotting_data:
-        p = p_d[list(p_d.keys())[0]]
-        for p_ in p:
-            if len(p_['meta']['question']) > len(question):
-                question = p_['meta']['question']
-    longest_question = ' ' * len(question)
+    # question = ''
+    # for p_d in global_plotting_data:
+    #     p = p_d[list(p_d.keys())[0]]
+    #     for p_ in p:
+    #         if len(p_['meta']['question']) > len(question):
+    #             question = p_['meta']['question']
+    # longest_question = ' ' * len(question)
 
     plotting_data = global_plotting_data[xx]
 
@@ -239,6 +240,8 @@ def plot_histograms(xx, global_plotting_data, ctx):
 
     ax.set_ylim([ylim_low,
                  ylim_up + 2 * np.abs(stats_height) + np.abs(stats_pos[1])])
+
+    lineplot.add_legend(plotting_data, ctx['histogram_colors'], ctx)
 
     # save plot
     fig.savefig(

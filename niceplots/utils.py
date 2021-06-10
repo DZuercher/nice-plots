@@ -8,6 +8,9 @@ import hyphen
 from hyphen.textwrap2 import fill
 import numpy as np
 
+lang = 'de_DE'
+hyp = hyphen.Hyphenator(lang)
+
 
 def init_logger(filepath, logging_level='info'):
     """
@@ -62,7 +65,8 @@ def get_render_size(object, ctx, x_size=True):
 
     # load cache
     if x_size:
-        cache_file = os.path.expanduser('~/.cache/nice-plots/object_render_sizes.npy')
+        cache_file = os.path.expanduser(
+            '~/.cache/nice-plots/object_render_sizes.npy')
         if os.path.exists(cache_file):
             cache = np.load(cache_file)
         else:
@@ -85,7 +89,8 @@ def get_render_size(object, ctx, x_size=True):
             np.save(cache_file, cache)
         return width
     else:
-        cache_file = os.path.expanduser('~/.cache/nice-plots/object_render_heights.npy')
+        cache_file = os.path.expanduser(
+            '~/.cache/nice-plots/object_render_heights.npy')
         if os.path.exists(cache_file):
             cache = np.load(cache_file)
         else:
@@ -153,6 +158,16 @@ def add_questions(p_d, n_questions, positions, ax, ctx, dist):
                 ha='left', fontsize=ctx['fontsize'])
 
 
-def wrap_text(text, width=60, lang='de_DE'):
-    hyp = hyphen.Hyphenator(lang)
-    return fill(text, width=width, use_hyphenator=hyp)
+def wrap_text(text, width=60):
+    cache_file = os.path.expanduser('~/.cache/nice-plots/text_wrap.npy')
+    if os.path.exists(cache_file):
+        cache = np.load(cache_file)
+    else:
+        cache = np.asarray([['', '']], dtype=('str', 'str'))
+    if text in cache[:, 0]:
+        return cache[cache[:, 0] == text, 1]
+    else:
+        wrapped = fill(text, width=width, use_hyphenator=hyp)
+        cache = np.vstack((cache, [[text, wrapped]]))
+        np.save(cache_file, cache)
+        return wrapped

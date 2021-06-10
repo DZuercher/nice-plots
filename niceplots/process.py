@@ -85,9 +85,21 @@ def parse_filter_functions(data, codebook, ctx):
         for f_name in list(filters.keys()):
             f_names.append(f_name)
             f = filters[f_name]
-            for var in codebook[ctx['name_label']]:
-                if var in f:
-                    f = f.replace(var, 'np.asarray(data["{}"])'.format(var))
+            # attempt to replace all variable names
+            for var in sorted(codebook[ctx['name_label']], key=len):
+                ii = 0
+                while 1:
+                    pos = f.find(var, ii)
+                    if (pos >= 0):
+                        if (f[pos - 1] != '['):
+                            f = f.replace(
+                                var,
+                                'np.asarray(data["{}"])'.format(var), 1)
+                            ii += len(var) + 18
+                        else:
+                            ii += len(var) + 2
+                    else:
+                        break
             idx = eval(f)
             fs.append(idx)
         return (f_names, fs)

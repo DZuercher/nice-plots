@@ -34,9 +34,20 @@ def check_config(ctx, codebook, data):
         for f_name in list(filters.keys()):
             f = filters[f_name]
             # attempt to replace all variable names
-            for var in codebook[ctx['name_label']]:
-                if var in f:
-                    f = f.replace(var, 'np.asarray(data["{}"])'.format(var))
+            for var in sorted(codebook[ctx['name_label']], key=len):
+                ii = 0
+                while 1:
+                    pos = f.find(var, ii)
+                    if (pos >= 0):
+                        if (f[pos - 1] != '['):
+                            f = f.replace(
+                                var,
+                                'np.asarray(data["{}"])'.format(var), 1)
+                            ii += len(var) + 18
+                        else:
+                            ii += len(var) + 2
+                    else:
+                        break
             try:
                 eval(f)
             except KeyError:
