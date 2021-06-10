@@ -85,7 +85,8 @@ def parse_filter_functions(data, codebook, ctx):
         for f_name in list(filters.keys()):
             f_names.append(f_name)
             f = filters[f_name]
-            for var in codebook[ctx['name_label']]:
+            sorted_list = sorted(list(codebook[ctx['name_label']]), key=len)
+            for var in reversed(sorted_list):
                 if var in f:
                     f = f.replace(var, 'np.asarray(data["{}"])'.format(var))
             idx = eval(f)
