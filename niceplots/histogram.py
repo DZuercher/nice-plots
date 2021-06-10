@@ -117,8 +117,16 @@ def plot_histograms(xx, global_plotting_data, ctx):
                 data += [jj] * len(d[d == 1])
             data = np.asarray(data)
             histogram_data.append(data)
+            # if no data to plot for this filter category cannot do min
+            if len(data) == 0:
+                continue
             lower = np.min([lower, np.min(data)])
             upper = np.max([upper, np.max(data)])
+        if not (np.isfinite(lower) & np.isfinite(upper)):
+            LOGGER.warn(
+                "There is no appropriate data to plot for "
+                f"question block {xx}. Skipping...")
+            return
 
         # get tick labels
         labels = []
