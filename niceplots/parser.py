@@ -36,7 +36,7 @@ def check_config(ctx, codebook, data):
             # attempt to replace all variable names
             for var in codebook[ctx['name_label']]:
                 if var in f:
-                    f.replace(var, f"np.asarray(data['{var}'])")
+                    f = f.replace(var, 'np.asarray(data["{}"])'.format(var))
             try:
                 eval(f)
             except KeyError:
@@ -219,7 +219,8 @@ def load_codebook(ctx, codebook_path):
         LOGGER.info(f"Loaded codebook from {codebook_path}")
 
     # add some additional columns to the codebook
-    additional_codebook_entries = ['color_scheme', 'invert', 'nbins', 'unit']
+    additional_codebook_entries = ['color_scheme', 'invert', 'nbins', 'unit',
+                                   'bar_text_color']
 
     if initialize:
         # add the plotting options columns to the codebook
