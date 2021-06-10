@@ -220,7 +220,8 @@ def load_codebook(ctx, codebook_path):
         LOGGER.info(f"Loaded codebook from {codebook_path}")
 
     # add some additional columns to the codebook
-    additional_codebook_entries = ['color_scheme', 'invert', 'nbins', 'unit']
+    additional_codebook_entries = ['color_scheme', 'invert', 'nbins', 'unit',
+                                   'bar_text_color']
 
     if initialize:
         # add the plotting options columns to the codebook

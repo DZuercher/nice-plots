@@ -20,7 +20,7 @@ def plot_nice_bar(ax, plotting_data, positions, ctx, height):
     :return : Used colors
     """
 
-    text_color = ctx['bar_text_color']
+    text_color = plotting_data[0]['meta']['bar_text_color']
 
     # create histograms for each question
     results = []
