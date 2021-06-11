@@ -165,7 +165,7 @@ def wrap_text(text, width=60):
     else:
         cache = np.asarray([['', '']], dtype=('str', 'str'))
     if text in cache[:, 0]:
-        return cache[cache[:, 0] == text, 1]
+        return cache[cache[:, 0] == text, 1][0]
     else:
         wrapped = fill(text, width=width, use_hyphenator=hyp)
         cache = np.vstack((cache, [[text, wrapped]]))
