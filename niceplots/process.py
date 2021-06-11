@@ -91,13 +91,13 @@ def parse_filter_functions(data, codebook, ctx):
                 while 1:
                     pos = f.find(var, ii)
                     if (pos >= 0):
-                        if (f[pos - 1] != '['):
+                        if (f[pos - 1] != '"'):
                             f = f.replace(
                                 var,
                                 'np.asarray(data["{}"])'.format(var), 1)
-                            ii += len(var) + 18
+                            ii += len(var) + 19
                         else:
-                            ii += len(var) + 2
+                            ii += len(var) + 3
                     else:
                         break
             idx = eval(f)
