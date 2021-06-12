@@ -88,7 +88,6 @@ def parse_filter_functions(data, codebook, ctx):
             f = filters[f_name]
             # attempt to replace all variable names
             f = parser.get_filter_from_string(f, codebook[ctx['name_label']])
-            print(f)
             idx = eval(f)
             fs.append(idx)
         return (f_names, fs)

@@ -26,15 +26,6 @@ def get_max_question_width(global_plotting_data, ctx):
 
 
 def plot_histograms(xx, global_plotting_data, ctx):
-    # get longest question
-    # question = ''
-    # for p_d in global_plotting_data:
-    #     p = p_d[list(p_d.keys())[0]]
-    #     for p_ in p:
-    #         if len(p_['meta']['question']) > len(question):
-    #             question = p_['meta']['question']
-    # longest_question = ' ' * len(question)
-
     plotting_data = global_plotting_data[xx]
 
     n_questions = len(plotting_data[list(plotting_data.keys())[0]])
@@ -160,10 +151,10 @@ def plot_histograms(xx, global_plotting_data, ctx):
 
     # need to explicitly set axes limits in order for data coordinates to be
     # reset!
-    ylims = ax.get_ylim()
     xlims = ax.get_xlim()
     ax.set_xlim(xlims)
-    ax.set_ylim(ylims)
+    delta = (bins[1] - bins[0]) / 2.
+    ax.set_ylim([bins[0] - delta, bins[-1] + delta])
 
     max_question_width = get_max_question_width(global_plotting_data, ctx)
     max_question_width = (

@@ -20,20 +20,16 @@ def isnumber(x):
 
 def get_filter_from_string(f, variables):
     for var in reversed(sorted(variables, key=len)):
-        print(var)
         ii = 0
         while 1:
             pos = f.find(var, ii)
             if (pos > 0):
                 if (f[pos - 1] != '"'):
-                    print(f"Found at position {pos}")
                     f_ = f[:pos]
                     rep = f[pos:].replace(
                         var,
                         'np.asarray(data["{}"])'.format(var), 1)
-                    print(f_, rep)
                     f = f_ + rep
-                    print(f)
                     ii = pos + len(var) + 20
                 else:
                     ii = pos + len(var) + 3
