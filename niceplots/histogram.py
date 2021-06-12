@@ -94,8 +94,6 @@ def plot_histograms(xx, global_plotting_data, ctx):
 
     if multi_histogram:
         histogram_data = []
-        lower = +np.inf
-        upper = -np.inf
         # loop over filter categories
         for ii, key in enumerate(plotting_data.keys()):
             # loop over questions
@@ -105,19 +103,9 @@ def plot_histograms(xx, global_plotting_data, ctx):
                 d = p_d['data'][np.logical_not(np.isnan(p_d['data']))]
                 d = d.astype(int)
                 # Assuming 1 = Yes
-                # data += [np.sum(d == 1)]
                 data += [jj] * len(d[d == 1])
             data = np.asarray(data)
             histogram_data.append(data)
-            # if no data to plot for this filter category cannot do min
-            if len(data) == 0:
-                continue
-            lower = np.min([lower, np.min(data)])
-            upper = np.max([upper, np.max(data)])
-        if not (np.isfinite(lower) & np.isfinite(upper)):
-            LOGGER.warn(
-                "There is no appropriate data to plot for "
-                f"question block {xx}. Skipping...")
             return
 
         # get tick labels
@@ -128,7 +116,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
             label_ticks.append(jj)
 
         # set bins
-        bins = np.arange(lower - 0.5, upper + 1.5)
+        bins = np.arange(-0.5, len(plotting_data) + 0.5)
 
     # initialize canvas
     figsize = (ctx['plot_width'], ctx['plot_width'])
