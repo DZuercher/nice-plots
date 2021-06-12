@@ -95,6 +95,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
     if multi_histogram:
         histogram_data = []
         # loop over filter categories
+        empty = True
         for ii, key in enumerate(plotting_data.keys()):
             # loop over questions
             data = []
@@ -105,9 +106,11 @@ def plot_histograms(xx, global_plotting_data, ctx):
                 # Assuming 1 = Yes
                 data += [jj] * len(d[d == 1])
             data = np.asarray(data)
+            if len(data) > 0:
+                empty = False
             histogram_data.append(data)
+        if empty:
             return
-
         # get tick labels
         labels = []
         label_ticks = []
