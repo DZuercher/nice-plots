@@ -2,6 +2,7 @@
 
 import numpy as np
 from niceplots import utils
+from niceplots import parser
 import frogress
 
 LOGGER = utils.init_logger(__file__)
@@ -86,20 +87,8 @@ def parse_filter_functions(data, codebook, ctx):
             f_names.append(f_name)
             f = filters[f_name]
             # attempt to replace all variable names
-            for var in sorted(codebook[ctx['name_label']], key=len):
-                ii = 0
-                while 1:
-                    pos = f.find(var, ii)
-                    if (pos >= 0):
-                        if (f[pos - 1] != '"'):
-                            f = f.replace(
-                                var,
-                                'np.asarray(data["{}"])'.format(var), 1)
-                            ii += len(var) + 19
-                        else:
-                            ii += len(var) + 3
-                    else:
-                        break
+            f = parser.get_filter_from_string(f, codebook[ctx['name_label']])
+            print(f)
             idx = eval(f)
             fs.append(idx)
         return (f_names, fs)

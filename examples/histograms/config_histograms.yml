@@ -51,7 +51,7 @@ no_answer_code : 99
 # and each filter follows the format: 'group name' : 'varibale operator value'
 # NOTE: The whitespaces matter!
 # Example:
-filters : {'Group 1' : 'VAR01 == 1', 'Others' : 'VAR01 >= 2'}
+filters : {'Group 1' : 'VAR01 == 1', 'Others' : '(VAR01 == 2) | (VAR01 == 4)'}
 # filters : {}
 
 ############################################################

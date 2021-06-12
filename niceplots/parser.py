@@ -18,6 +18,36 @@ def isnumber(x):
         return False
 
 
+def get_filter_from_string(f, variables):
+    for var in reversed(sorted(variables, key=len)):
+        print(var)
+        ii = 0
+        while 1:
+            pos = f.find(var, ii)
+            if (pos > 0):
+                if (f[pos - 1] != '"'):
+                    print(f"Found at position {pos}")
+                    f_ = f[:pos]
+                    rep = f[pos:].replace(
+                        var,
+                        'np.asarray(data["{}"])'.format(var), 1)
+                    print(f_, rep)
+                    f = f_ + rep
+                    print(f)
+                    ii = pos + len(var) + 20
+                else:
+                    ii = pos + len(var) + 3
+            elif pos == 0:
+                # need special handling for replace at beginning
+                f = f.replace(
+                    var,
+                    'np.asarray(data["{}"])'.format(var), 1)
+                ii = pos + len(var) + 20
+            else:
+                break
+    return f
+
+
 def check_config(ctx, codebook, data):
     """
     Checks if all attributes of the configuration instance are valid.
@@ -34,26 +64,12 @@ def check_config(ctx, codebook, data):
         for f_name in list(filters.keys()):
             f = filters[f_name]
             # attempt to replace all variable names
-            for var in sorted(codebook[ctx['name_label']], key=len):
-                ii = 0
-                while 1:
-                    pos = f.find(var, ii)
-                    if (pos >= 0):
-                        if (f[pos - 1] != '"'):
-                            f = f.replace(
-                                var,
-                                'np.asarray(data["{}"])'.format(var), 1)
-                            ii += len(var) + 19
-                        else:
-                            ii += len(var) + 3
-                    else:
-                        break
+            f = get_filter_from_string(f, codebook[ctx['name_label']])
             try:
                 eval(f)
             except KeyError:
                 raise Exception(
-                    f"Unable to process filter entry {f}. "
-                    f"The column {var} does not exist in your data.")
+                    f"Unable to process filter entry {f}. ")
             except SyntaxError:
                 raise Exception(
                     f"Unable to process filter entry {f}. "
