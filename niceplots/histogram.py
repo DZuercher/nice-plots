@@ -116,7 +116,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
             label_ticks.append(jj)
 
         # set bins
-        bins = np.arange(-0.5, len(plotting_data) + 0.5)
+        bins = np.arange(-0.5, len(plotting_data[key]) + 0.5)
 
     # initialize canvas
     figsize = (ctx['plot_width'], ctx['plot_width'])
