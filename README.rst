@@ -10,17 +10,17 @@ Currently there are 3 different types of visualization:
 
 barplot:
 
-.. image:: examples/barplots/barplots_2.pdf
+.. image:: examples/barplots/barplots_2.png
     :width: 500px
 
 lineplot:
 
-.. image:: examples/linelots/lineplots_4.pdf
+.. image:: examples/lineplots/lineplots_4.png
     :width: 500px
 
 histogram:
 
-.. image:: examples/histograms/histograms_0.pdf
+.. image:: examples/histograms/histograms_0.png
     :width: 500px
 
 

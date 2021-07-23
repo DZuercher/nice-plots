@@ -25,7 +25,7 @@ def test_barplots():
     pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
 
     ctx = parser.load_config(config_path, output_directory, output_name)
-    ctx['format'] = 'pdf'
+    ctx['format'] = 'png'
     codebook = parser.load_codebook(ctx, codebook_path)
     data = parser.load_data(ctx, data_path, codebook)
 
