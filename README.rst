@@ -9,19 +9,22 @@ nice-plots allows to easily and automatically visualize survey data.
 Currently there are 3 different types of visualization:
 
 barplot:
+--------
 
 .. image:: examples/barplots/barplots_2.png
-    :width: 500px
+    :width: 300px
 
 lineplot:
+---------
 
 .. image:: examples/lineplots/lineplots_4.png
-    :width: 500px
+    :width: 300px
 
 histogram:
+----------
 
 .. image:: examples/histograms/histograms_0.png
-    :width: 500px
+    :width: 300px
 
 
 Installation
