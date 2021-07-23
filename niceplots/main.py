@@ -7,7 +7,7 @@ from niceplots import lineplot
 from niceplots import histogram
 from niceplots import utils
 import os
-import tqdm
+from tqdm import tqdm
 import sys
 import pathlib
 import argparse

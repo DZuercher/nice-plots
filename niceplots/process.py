@@ -3,7 +3,7 @@
 import numpy as np
 from niceplots import utils
 from niceplots import parser
-import tqdm
+from tqdm import tqdm
 
 LOGGER = utils.init_logger(__file__)
 
