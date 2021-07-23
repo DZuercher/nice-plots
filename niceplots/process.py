@@ -3,7 +3,7 @@
 import numpy as np
 from niceplots import utils
 from niceplots import parser
-import frogress
+import tqdm
 
 LOGGER = utils.init_logger(__file__)
 
@@ -112,7 +112,7 @@ def process_data(data, codebook, ctx):
 
     # break up data into question blocks
     global_plotting_data = []
-    for block_id in frogress.bar(np.unique(block_ids)):
+    for block_id in tqdm(np.unique(block_ids)):
         # skip block_id = -1
         if block_id < 0.:
             continue

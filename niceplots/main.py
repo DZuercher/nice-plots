@@ -7,7 +7,7 @@ from niceplots import lineplot
 from niceplots import histogram
 from niceplots import utils
 import os
-import frogress
+import tqdm
 import sys
 import pathlib
 import argparse
@@ -65,7 +65,7 @@ def main():
                                                    'histograms'],
                           help='Type of plots to produce')
     cli_args.add_argument('--serial', action='store_true',
-                          default=False,
+                          default=True,
                           help='If True nice-plots runs in serial mode '
                           'instead of parallel.')
     cli_args.add_argument('--format', type=str, action='store',
@@ -139,7 +139,7 @@ def main():
         LOGGER.info("Running in serial mode")
         # loop over question blocks and produce one plot for each
         # question block
-        for xx, plotting_data in frogress.bar(enumerate(global_plotting_data)):
+        for xx, plotting_data in tqdm(enumerate(global_plotting_data)):
             exec_func(xx, global_plotting_data, ctx)
 
     LOGGER.info("nice-plots finished without errors :)")

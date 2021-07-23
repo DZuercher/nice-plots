@@ -117,7 +117,7 @@ line_plot_dist : 0.3 # in inches
 line_plot_padding :  1.0 # in inches
 
 # Distance between line plots and the max and min labels at the side
-line_plot_label_padding :  0.2 # in inches
+line_plot_label_padding :  1.0 # in inches
 
 # HISTOGRAMS
 ############################################################
