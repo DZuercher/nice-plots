@@ -229,3 +229,4 @@ def plot_histograms(xx, global_plotting_data, ctx):
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.{ctx['format']}",
         bbox_inches='tight')
+    plt.close()
