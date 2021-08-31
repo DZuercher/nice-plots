@@ -36,7 +36,7 @@ def parse_mapping(data, mapping, var_name, ctx, nbins):
         # sort by codes
         codes = []
         for entry in ms:
-            codes.append(int(ms['code']))
+            codes.append(int(entry['code']))
         codes = np.asarray(codes)
         idx = np.argsort(codes)
         ms = np.asarray(ms)[idx]
