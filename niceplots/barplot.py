@@ -116,8 +116,10 @@ def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars, dist,
         cax = fig.add_axes([position[0], position[1],
                             np.abs(size[0]), np.abs(size[1])])
 
-        norm = mpl.colors.Normalize(vmin=0, vmax=len(p_d['mapping']) + 1)
+        norm = mpl.colors.Normalize(vmin=0, vmax=len(p_d['mapping']))
         c_m = getattr(mpl.cm, p_d['color_scheme'])
+        c_m = mpl.colors.ListedColormap(c_m(np.linspace(
+            0.15, 0.85, len(p_d['mapping']))))
         s_m = mpl.cm.ScalarMappable(cmap=c_m, norm=norm)
         s_m.set_array([])
         cbar = plt.colorbar(s_m, cax=cax, orientation='horizontal',
