@@ -24,23 +24,20 @@ def get_max_question_width(global_plotting_data, ctx):
             label_width = np.max([label_width, extent])
     return label_width
 
+def get_histogram_type(n_questions, plotting_data, xx):
+    """Determine if the given data can be used to 
+    construct a single histogram or a binary histogram"""
 
-def plot_histograms(xx, global_plotting_data, ctx):
-    plotting_data = global_plotting_data[xx]
-
-    n_questions = len(plotting_data[list(plotting_data.keys())[0]])
-
-    # check if this can be made into a single histogram
+    single_histogram = False 
+    multi_histogram = False
     if n_questions == 1:
         single_histogram = True
-        multi_histogram = False
         LOGGER.info(f"Question block {xx} contains only a single question "
                     "-> Producing a single histogram for this.")
     else:
         key0 = list(plotting_data.keys())[0]
         if len(plotting_data[key0][0]['meta']['mapping']) == 2:
             multi_histogram = True
-            single_histogram = False
             LOGGER.info(f"Question block {xx} contains multiple questions "
                         "with 2 possible answers each"
                         "-> Interpreting as binary and combining "
@@ -51,7 +48,10 @@ def plot_histograms(xx, global_plotting_data, ctx):
         else:
             LOGGER.warn(f"Cannot convert question block {xx} into "
                         "a histogram. Skipping...")
-            return
+    return single_histogram, multi_histogram
+
+def get_histogram_data(plotting_data, single_histogram, multi_histogram):
+    """Depending on the histogram type get the necessary data."""
 
     if single_histogram:
         # loop over filter categories
@@ -92,7 +92,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
                 label_ticks.append(m['code'])
                 labels.append(m['label'])
 
-    if multi_histogram:
+    elif multi_histogram:
         histogram_data = []
         # loop over filter categories
         empty = True
@@ -121,42 +121,22 @@ def plot_histograms(xx, global_plotting_data, ctx):
         # set bins
         bins = np.arange(-0.5, len(plotting_data[key]) + 0.5)
 
-    # initialize canvas
-    figsize = (ctx['plot_width'], ctx['plot_width'])
-    fig, ax = plt.subplots(figsize=figsize)
+    return labels, label_ticks, bins, histogram_data
 
-    n, bin_edges, _ = ax.hist(
-        histogram_data, bins=bins, orientation=u'horizontal',
-        color=ctx['histogram_colors'][:len(list(plotting_data.keys()))],
-        rwidth=ctx['rwidth'])
-    n = np.asarray(n)
-    if len(list(n.shape)) == 1:
-        n = n.reshape(1, -1)
-
-    # get boffset of bars (from matplotib source code)
+def add_bar_length_labels(fig, ax, n, bin_edges, ctx):
+    """Adds a small number at the top of the bars indicating the length of the bars."""
+    # get offset of bars (from matplotib source code)
     dr = np.clip(ctx['rwidth'], 0, 1)
     totwidth = np.diff(bin_edges)
     width = dr * totwidth / len(n)
-    boffset = -0.5 * dr * totwidth * (1 - 1 / len(n))
-    boffset += 0.5 * totwidth
 
-    # need to explicitly set axes limits in order for data coordinates to be
-    # reset!
-    xlims = ax.get_xlim()
-    ax.set_xlim(xlims)
-    delta = (bins[1] - bins[0]) / 2.
-    ax.set_ylim([bins[0] - delta, bins[-1] + delta])
-
-    max_question_width = get_max_question_width(global_plotting_data, ctx)
-    max_question_width = (
-        ax.transLimits.inverted().transform((max_question_width, 0))
-        - ax.transLimits.inverted().transform((0, 0)))[0]
-
-    # distance between bars and their labels
-    dpi = fig.dpi
+    # distance between bars and their labels (in axis pixels)
     zero_point = ax.transData.inverted().transform((0, 0))
     bar_label_pad = (ax.transData.inverted().transform(
-        (ctx['bar_pad'] * dpi, 0)) - zero_point)[0]
+        (ctx['bar_pad'] * fig.dpi, 0)) - zero_point)[0]
+
+    boffset = -0.5 * dr * totwidth * (1 - 1 / len(n))
+    boffset += 0.5 * totwidth
 
     max_value = 0
     for jj, nn in enumerate(n):
@@ -173,16 +153,18 @@ def plot_histograms(xx, global_plotting_data, ctx):
                         bin_edges[ii] + boffset[ii] + jj * width[ii],
                         str(int(nnn)),
                         va='center', ha='left', fontsize=ctx['fontsize'])
+    return max_value
 
+def add_tick_labels(fig, ax, labels, label_ticks, ctx, global_plotting_data):
+    """ Add labels to the histogram bars indicating the question or category name."""
+    
     mean_label_tick = np.mean(label_ticks)
 
-    # put tick labels
-    # wrap labels
     for ii in range(len(labels)):
         labels[ii] = utils.wrap_text(labels[ii])
 
     pad = (ax.transData.inverted().transform(
-        (ctx['histogram_padding'] * dpi, 0))
+        (ctx['histogram_padding'] * fig.dpi, 0))
         - ax.transData.inverted().transform((0, 0)))[0]
     for ii in range(len(label_ticks)):
         ax.text(-np.abs(pad), label_ticks[ii], labels[ii],
@@ -191,9 +173,15 @@ def plot_histograms(xx, global_plotting_data, ctx):
     ax.set_xticks([])
     ax.set_yticks([])
 
+    max_question_width = get_max_question_width(global_plotting_data, ctx)
+    max_question_width = (
+        ax.transLimits.inverted().transform((max_question_width, 0))
+        - ax.transLimits.inverted().transform((0, 0)))[0]
+
     ax.text(-max_question_width - pad, mean_label_tick, ' ')
 
-    # add stats
+def add_stats(plotting_data, ax, max_value, ctx):
+    """Add a label indicating the number of participants and those that did not give an answer."""
     N = 0
     E = 0
     for ii, key in enumerate(plotting_data.keys()):
@@ -208,6 +196,8 @@ def plot_histograms(xx, global_plotting_data, ctx):
 
     ylim_low, ylim_up = ax.get_ylim()
     xlim_low, xlim_up = ax.get_xlim()
+
+    print(max_value)
     ax.set_xlim([0, max_value])
 
     stats_pos = ax.transData.inverted().transform(
@@ -216,13 +206,59 @@ def plot_histograms(xx, global_plotting_data, ctx):
 
     ax.text(xlim_up - np.abs(stats_pos[0]), ylim_up,
             stats, fontsize=ctx['fontsize_stats'], ha='right', va='bottom')
+
+    # return the height of the stats label
     stats_height = utils.get_render_size(stats, ctx, x_size=False)
     stats_height = (ax.transLimits.inverted().transform(
         (0, stats_height)) - ax.transLimits.inverted().transform((0, 0)))[1]
+    return ylim_low, ylim_up, stats_pos, stats_height
+
+def plot_histograms(xx, global_plotting_data, ctx):
+    plotting_data = global_plotting_data[xx]
+
+    n_questions = len(plotting_data[list(plotting_data.keys())[0]])
+
+    # check if this kind of item can be made into a single histogram/multihistogram
+    single_histogram, multi_histogram = get_histogram_type(n_questions, plotting_data, xx)
+
+    if (not single_histogram) and (not multi_histogram):
+        return
+
+    # preprocessing of data
+    labels, label_ticks, bins, histogram_data = get_histogram_data(plotting_data, single_histogram, multi_histogram)
+
+    # initialize canvas
+    figsize = (ctx['plot_width'], ctx['plot_width'])
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # draw histogram
+    n, bin_edges, _ = ax.hist(
+        histogram_data, bins=bins, orientation=u'horizontal',
+        color=ctx['histogram_colors'][:len(list(plotting_data.keys()))],
+        rwidth=ctx['rwidth'])
+
+    # need to explicitly set axes limits in order for data coordinates to be reset!
+    xlims = ax.get_xlim()
+    ax.set_xlim(xlims)
+    delta = (bins[1] - bins[0]) / 2.
+    ax.set_ylim([bins[0] - delta, bins[-1] + delta])
+
+    n = np.asarray(n)
+    if len(list(n.shape)) == 1:
+        n = n.reshape(1, -1)
+
+    # add small numbers at top of bars to indicate their length
+    max_bar_length = add_bar_length_labels(fig, ax, n, bin_edges, ctx)
+
+    add_tick_labels(fig, ax, labels, label_ticks, ctx, global_plotting_data)
+
+    # add stats to the plot
+    ylim_low, ylim_up, stats_pos, stats_height = add_stats(plotting_data, ax, max_bar_length, ctx)
 
     ax.set_ylim([ylim_low,
                  ylim_up + 2 * np.abs(stats_height) + np.abs(stats_pos[1])])
 
+    # add the legend
     lineplot.add_legend(plotting_data, ctx['histogram_colors'], ctx)
 
     # save plot

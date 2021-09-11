@@ -171,3 +171,44 @@ def wrap_text(text, width=60):
         cache = np.vstack((cache, [[text, wrapped]]))
         np.save(cache_file, cache)
         return wrapped
+
+def inches_to_axispixels_size(size, fig, ax, dim='x'):
+    """Given size of an object in inches returns the size of the object 
+    in pixels in the specified dimesion of the plot (x or y)"""
+    dpi = fig.dpi
+    zero_point = ax.transAxes.inverted().transform((0, 0)) # reference point
+
+    size = np.abs(size)
+    if dim == 'x':
+        phys_size = (ax.transAxes.inverted().transform(
+            (size * dpi, 0)) - zero_point)[0]
+        return np.abs(phys_size)
+    elif dim == 'y':
+        phys_size = (ax.transAxes.inverted().transform(
+            (0, size* dpi)) - zero_point)[1]
+        return np.abs(phys_size)
+    else:
+        raise ValueError("dim must be x or y.")
+
+def axispixels_to_figurepixels_position(pos, ax): 
+    figure_pos = ax.figure.transFigure.inverted().transform(
+        ax.transData.transform(pos))
+    return figure_pos
+
+def axispixels_to_figurepixels_size(size, ax, dim='x'): 
+    zero_point = ax.figure.transFigure.inverted().transform(
+        ax.transData.transform((0, 0)))
+
+    size = np.abs(size)
+    if dim == 'x':
+        fig_size = ax.figure.transFigure.inverted().transform(
+            ax.transData.transform((size, 0)))
+        fig_size = (fig_size - zero_point)[0]
+        return np.abs(fig_size)
+    elif dim == 'y':
+        fig_size = ax.figure.transFigure.inverted().transform(
+            ax.transData.transform((0, size)))
+        fig_size = (fig_size - zero_point)[1]
+        return np.abs(fig_size)
+    else:
+        raise ValueError("dim must be x or y.")
