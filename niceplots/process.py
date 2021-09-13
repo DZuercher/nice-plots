@@ -32,6 +32,15 @@ def parse_mapping(data, mapping, var_name, ctx, nbins):
             # remove leading and trailing whitespaces
             m['label'] = label.strip()
             ms.append(m)
+            
+        # sort by codes
+        codes = []
+        for entry in ms:
+            codes.append(int(entry['code']))
+        codes = np.asarray(codes)
+        idx = np.argsort(codes)
+        ms = np.asarray(ms)[idx]
+
     return ms, contains_no_answer
 
 

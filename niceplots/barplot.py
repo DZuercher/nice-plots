@@ -39,9 +39,6 @@ def plot_nice_bar(ax, plotting_data, positions, ctx, height):
         else:
             hist = np.bincount(d)
             hist = hist[1:]
-        # if p_d['meta']['invert'] == 'True':
-        #     # flip order of bins
-        #     hist = np.flip(hist)
         # ignore first bin (zero values)
         results.append(hist)
         results_cum.append(np.cumsum(hist))
@@ -91,50 +88,64 @@ def plot_nice_bar(ax, plotting_data, positions, ctx, height):
 def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars, dist,
                height):
     """
-    Adds a legend at the top describing the color -> label matching.
+    Adds a legend at the top describing what the colors mean.
     """
     p_d = plotting_data[0]['meta']
+
     if 'bins' in p_d['mapping']:
+        # no labels for the colors given. 
+        # Instead add a numerical range for each color category.
         category_names = []
         lower = p_d['mapping']['bins'][:-1]
         upper = p_d['mapping']['bins'][1:]
         category_names = [
             f'{math.ceil(ll)} - {math.floor(u)} {p_d["unit"]}'
             for ll, u in zip(lower, upper)]
-    elif '' in [p_d['mapping'][xx]['label']
-                for xx in range(len(p_d['mapping']))]:
+            
+    elif '' in [p_d['mapping'][xx]['label'] for xx in range(len(p_d['mapping']))]:
+        # no labels for the colors given.
+        # instead just add the colorbar with a min and max label
 
-        # requires FIGURE coordinates!
+        # dimensions in figure coordinates
         position = [1. / 3., -dist]
-        position = ax.figure.transFigure.inverted().transform(
-            ax.transData.transform(position))
+        position = utils.axispixels_to_figurepixels_position(position, ax)
         size = [1. / 3., height / 2.]
-        size = ax.figure.transFigure.inverted().transform(
-            ax.transData.transform(size))
-        size -= ax.figure.transFigure.inverted().transform(
-            ax.transData.transform((0, 0)))
-        cax = fig.add_axes([position[0], position[1],
-                            np.abs(size[0]), np.abs(size[1])])
+        x_size = utils.axispixels_to_figurepixels_size(size[0], ax, dim='x')
+        y_size = utils.axispixels_to_figurepixels_size(size[1], ax, dim='y')
 
-        norm = mpl.colors.Normalize(vmin=0, vmax=len(p_d['mapping']) + 1)
+        print(position, x_size, y_size)
+
+        cax = fig.add_axes([position[0], position[1],
+                            x_size, y_size])
+
+        # colorbar
+        norm = mpl.colors.Normalize(vmin=0, vmax=len(p_d['mapping']))
         c_m = getattr(mpl.cm, p_d['color_scheme'])
+        c_m = mpl.colors.ListedColormap(c_m(np.linspace(
+            0.15, 0.85, len(p_d['mapping']))))
         s_m = mpl.cm.ScalarMappable(cmap=c_m, norm=norm)
         s_m.set_array([])
         cbar = plt.colorbar(s_m, cax=cax, orientation='horizontal',
                             boundaries=list(
                                 np.arange(0, len(p_d['mapping']) + 1)),
                             spacing='proportional', ticks=[])
+        
+        # add min/max labels
         cax.text(-0.3, 0.5, p_d['mapping'][0]['label'],
                  va='center', ha='right', fontsize=ctx['fontsize_stats'])
         cax.text(len(p_d['mapping']) + 0.3, 0.5, p_d['mapping'][-1]['label'],
                  va='center', ha='left', fontsize=ctx['fontsize_stats'])
+        
         cbar.outline.set_visible(False)
         cax.set_ylim([0., 1.])
         return
+
     else:
+        # standard case. A label is given for each color.
         category_names = []
         for m in p_d['mapping']:
             category_names.append(m['label'])
+
     patches = []
     for ii, category in enumerate(category_names):
         patches.append(mpatches.Patch(
@@ -167,12 +178,13 @@ def add_stats(ax, plotting_data, positions, ctx):
                 fontsize=ctx['fontsize_stats'], color='black', va='center')
 
 
-def add_cat_names(n_categories, plotting_data,
+def add_category_labels(n_categories, plotting_data,
                   n_questions, positions, ax, ctx):
     """
     If the sample was split into different categories add a small label
     indicating the category for which the plot was made.
     """
+    positions = np.sort(np.asarray(positions))
     ax.tick_params(axis='y', which='both', length=0, pad=7)
     ax.set_yticks(positions, minor=True)
 
@@ -217,12 +229,12 @@ def plot_barplots(xx, global_plotting_data, ctx):
 
     # init figure
     fig, ax = plt.subplots()
-    dpi = fig.dpi
 
     # get number of questions and filters
     n_categories = len(plotting_data.keys())
     n_questions = len(plotting_data[list(plotting_data.keys())[0]])
 
+    # calculate plot size in inches
     y_size_in_inches = n_categories * n_questions * ctx['height']
     y_size_in_inches += (n_questions - 1) * ctx['major_dist']
     y_size_in_inches += n_questions * (n_categories - 1) * ctx['dist']
@@ -231,43 +243,31 @@ def plot_barplots(xx, global_plotting_data, ctx):
     figsize = (ctx['plot_width'], y_size_in_inches)
     fig, ax = plt.subplots(figsize=figsize)
 
-    # get plot height and distances in data coordinates
-    zero_point = ax.transAxes.inverted().transform((0, 0))
-    height = (ax.transAxes.inverted().transform(
-        (0, ctx['height'] * dpi)) - zero_point)[1]
-    dist = (ax.transAxes.inverted().transform(
-        (0, ctx['dist'] * dpi)) - zero_point)[1]
-    major_dist = (ax.transAxes.inverted().transform(
-        (0, ctx['major_dist'] * dpi)) - zero_point)[1]
-    label_pad = (ax.transAxes.inverted().transform(
-        (ctx['padding'] * dpi, 0)) - zero_point)[0]
-    height = np.abs(height)
-    dist = np.abs(dist)
-    label_pad = np.abs(label_pad)
-    major_dist = np.abs(major_dist)
 
-    question_padding = get_question_padding(
-        ctx, global_plotting_data, label_pad)
+    # get quantities in pixels
+    height = utils.inches_to_axispixels_size(ctx['height'], fig, ax, dim='y') # height of a single bar
+    dist = utils.inches_to_axispixels_size(ctx['dist'], fig, ax, dim='y') # distance between two bars of same question
+    major_dist = utils.inches_to_axispixels_size(ctx['major_dist'], fig, ax, dim='y') # distance between bars of different questions
+    label_pad = utils.inches_to_axispixels_size(ctx['padding'], fig, ax, dim='x') # distance between bar label and ??? 
+    distance = major_dist + dist * (n_categories - 1) + n_categories * height # distance between bars of same category
 
-    # distance between bars of same category
-    distance = major_dist + dist * (n_categories - 1) + n_categories * height
 
     # loop over filter categories
     all_positions = []
     for ii, key in enumerate(plotting_data.keys()):
         offset = dist * ii + height * ii + height / 2.
+        positions = [offset + ii * distance for ii in range(n_questions)] # positions of all questions belonging to this category
 
-        positions = [offset + ii * distance for ii in range(n_questions)]
         all_positions += positions
 
-        # make bar plots for all questions
+        # make bar plots for all questions and category ii
         category_colors = plot_nice_bar(
             ax, plotting_data[key], positions, ctx, height)
 
-        # add summary statistics at the end
+        # add summary statistics at end of the bar
         add_stats(ax, plotting_data[key], positions, ctx)
 
-    # add question labels
+    # add question labels central on the bars
     if n_categories == 1:
         offset = height / 2.
     elif (n_categories % 2) == 0:
@@ -279,27 +279,28 @@ def plot_barplots(xx, global_plotting_data, ctx):
     central_positions = [offset + ii
                          * distance for ii in range(n_questions)]
 
+    # distance between plot and questions
+    question_padding = get_question_padding(
+        ctx, global_plotting_data, label_pad)
     utils.add_questions(plotting_data[key], n_questions,
                         central_positions, ax, ctx, -question_padding)
 
-    # must stay here!
-    all_positions = np.sort(np.asarray(all_positions))
-    add_cat_names(n_categories, plotting_data,
+    # add category names (must stay here!)
+    add_category_labels(n_categories, plotting_data,
                   n_questions, all_positions, ax, ctx)
 
-    # x axis formatting
+    # axis formatting
     ax.set_xticks([])
     ax.set_xticklabels([])
     ax.set_xlim([0, 1])
-
-    # leave 1 dist from top and bottom border
-    ax.set_ylim([-dist / 2., np.max(all_positions) + (height + dist) / 2.])
+    ax.set_ylim([-dist / 2., np.max(all_positions) + (height + dist) / 2.]) # leave 1 dist from top and bottom border
 
     ax.invert_yaxis()
 
     # must be after limit setting and invert
     add_legend(plotting_data[key], category_colors, ctx, fig, ax,
                len(all_positions), dist, height)
+
     # save plot
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.{ctx['format']}",
