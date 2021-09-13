@@ -197,7 +197,6 @@ def add_stats(plotting_data, ax, max_value, ctx):
     ylim_low, ylim_up = ax.get_ylim()
     xlim_low, xlim_up = ax.get_xlim()
 
-    print(max_value)
     ax.set_xlim([0, max_value])
 
     stats_pos = ax.transData.inverted().transform(
