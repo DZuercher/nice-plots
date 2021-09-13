@@ -14,7 +14,10 @@ import pathlib
 from threading import Thread
 from tkPDFViewer import tkPDFViewer as pdf
 
-import tkinter
+try:
+    import tkinter
+except ImportError:
+    raise Exception("Could not import tkinter. This means tk is not configured properly. On Linux this can be solved by installing tk.")
 from tkinter import ttk
 import tkinter.font as tkFont
 
