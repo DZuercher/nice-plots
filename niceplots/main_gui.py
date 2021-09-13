@@ -1,14 +1,15 @@
 # Authors: Dominik Zuercher, Valeria Glauser
 
-from niceplots import objects
+from niceplots import niceplot_API
+from niceplots import gui
 
 def main():
-    gui = objects.GUI()
+    GUI = gui.GUI()
 
-    np_instance = objects.niceplots_handles()
+    np_instance = niceplot_API.niceplots_handles()
 
-    gui.config_gui(np_instance)
-    gui.start_gui()
+    GUI.config_gui(np_instance)
+    GUI.start_gui()
 
 if __name__ == '__main__':
     main()

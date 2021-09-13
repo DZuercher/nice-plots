@@ -113,8 +113,6 @@ def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars, dist,
         x_size = utils.axispixels_to_figurepixels_size(size[0], ax, dim='x')
         y_size = utils.axispixels_to_figurepixels_size(size[1], ax, dim='y')
 
-        print(position, x_size, y_size)
-
         cax = fig.add_axes([position[0], position[1],
                             x_size, y_size])
 

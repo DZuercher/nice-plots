@@ -1,16 +1,9 @@
 # Authors: Dominik Zuercher, Valeria Glauser
 
-from niceplots import parser
-from niceplots import process
-from niceplots import barplot
-from niceplots import lineplot
-from niceplots import histogram
 from niceplots import utils
 import os
 import numpy as np
 import glob
-from tqdm import tqdm
-import pathlib
 from threading import Thread
 from tkPDFViewer import tkPDFViewer as pdf
 
@@ -25,186 +18,6 @@ global LOGGER
 LOGGER = utils.init_logger(__file__)
 
 
-class niceplots_handles:
-    """ Holds nice plots objects """
-
-    def __init__(self):
-        ###########################
-        # static nice plots objects
-        ###########################
-        self.ctx = None
-        self.data = None
-        self.codebook = None
-        self.global_plotting_data = None
-
-        ###########################
-        # mutable objects
-        ###########################
-        self.default_config_path = tkinter.StringVar()
-        self.default_codebook_path = tkinter.StringVar()
-        self.output_dir = tkinter.StringVar()
-        self.data_path = tkinter.StringVar()
-        self.plot_type = tkinter.StringVar()
-        self.config_variables = {}
-        self.codebook_variables = {}
-        self.plot_type.set('bars')
-
-        # set defaults
-        self.default_config_path.set(
-            f'{os.path.dirname(__file__)}/../examples/example_config.yml')
-        self.default_codebook_path.set(
-            f'{os.path.dirname(__file__)}/../examples/example_codebook.csv')
-        self.output_dir.set(f'{os.path.dirname(__file__)}/../examples/test')
-        self.data_path.set(
-            f'{os.path.dirname(__file__)}/../examples/example_data.csv')
-
-    def create_directories(self):
-        """ Create directories needed by nice plots """
-        # create cache directory
-        cache_directory = os.path.expanduser("~/.cache/nice-plots")
-        pathlib.Path(cache_directory).mkdir(parents=True, exist_ok=True)
-
-        # create output directory
-        pathlib.Path(self.output_dir.get()).mkdir(parents=True, exist_ok=True)
-
-    def update_code(self, status_label):
-        """Update codebook"""
-        status_label.config(text="Saving...")
-        LOGGER.info("Updating codebook")
-
-        # update codebook
-        for col in self.codebook_variables:
-            for idy in range(len(self.codebook_variables[col])):
-                self.codebook[col][idy] = self.codebook_variables[col][idy].get()
-
-        # write to file
-        self.codebook.to_csv(self.ctx['codebook_path'], index=False)
-        status_label.config(text="")
-
-    def restore_code(self, status_label):
-        status_label.config(text="Restoring defaults")
-        LOGGER.info("Restoring codebook file")
-
-        # remove config file
-        os.remove(self.ctx['codebook_path'])
-
-        # re-initialize
-        self.codebook = parser.load_codebook(
-            self.ctx, self.default_codebook_path.get())
-
-        # reset string variables
-        n_entries = self.codebook.shape[0]
-        for idx, col in enumerate(self.codebook):
-            if col == 'Index':
-                continue
-            # assign in loop otherswise copies variable address
-            for idy in range(n_entries):
-                self.codebook_variables[col][idy].set(self.codebook[col][idy])
-        status_label.config(text="")
-
-    def update_config(self, status_label):
-        """Update config"""
-        status_label.config(text="Saving...")
-        LOGGER.info("Updating codebook")
-
-        # update ctx
-        for key in self.config_variables.keys():
-            self.ctx[key] = self.config_variables[key].get()
-
-        # update config file
-        with open(self.ctx['config_file'], 'r') as f:
-            config_file = f.readlines()
-        for ii in range(len(config_file)):
-            for key in self.ctx.keys():
-                if config_file[ii].startswith(key):
-                    if '#' in config_file[ii]:
-                        suffix = '#' + config_file[ii].split('#')[-1]
-                    else:
-                        suffix = ''
-                    if (parser.isnumber(self.ctx[key])) | (self.ctx[key].startswith('{')) | (self.ctx[key].startswith('[')) | (self.ctx[key].startswith('(')):
-                        config_file[ii] = f'{key} : {self.ctx[key]} {suffix} \n'
-                    else:
-                        config_file[ii] = f'{key} : \'{self.ctx[key]}\' {suffix} \n'
-        with open(self.ctx['config_file'], 'w') as f:
-            f.writelines(config_file)
-
-        status_label.config(text="")
-
-    def restore_config(self, status_label):
-        status_label.config(text="Restoring defaults")
-        LOGGER.info("Restoring config file")
-
-        # remove config file
-        os.remove(self.ctx['config_file'])
-
-        # re-initialize
-        self.ctx = parser.load_config(self.default_config_path.get(),
-                                      self.output_dir.get(),
-                                      os.path.basename(self.output_dir.get()))
-
-        # reset string variables
-        for key in self.config_variables.keys():
-            self.config_variables[key].set(self.ctx[key])
-
-        status_label.config(text="")
-
-    def save(self, status_label):
-        """ Resets static objects using current values of mutables """
-        status_label.config(text="Saving...")
-
-        self.create_directories()
-
-        LOGGER.info(
-            f"Set default configuration file path -> {self.default_config_path.get()}")
-        LOGGER.info(
-            f"Set default codebook file path -> {self.default_codebook_path.get()}")
-        LOGGER.info(f"Set output directory path -> {self.output_dir.get()}")
-        LOGGER.info(f"Set data file path -> {self.data_path.get()}")
-
-        # parsing
-        self.ctx = parser.load_config(self.default_config_path.get(),
-                                      self.output_dir.get(),
-                                      os.path.basename(self.output_dir.get()))
-
-        LOGGER.info("Loading codebook...")
-        self.codebook = parser.load_codebook(
-            self.ctx, self.default_codebook_path.get())
-
-        LOGGER.info("Loading data...")
-        self.data = parser.load_data(
-            self.ctx, self.data_path.get(), self.codebook)
-
-        parser.check_config(self.ctx, self.codebook, self.data)
-        LOGGER.info("Processing input data...")
-        self.global_plotting_data = process.process_data(
-            self.data, self.codebook, self.ctx)
-        status_label.config(text="")
-
-    def run(self, status_label):
-        """ Produces the plots """
-        status_label.config(text="Running...")
-        LOGGER.info("Producing your plots please wait...")
-        if self.plot_type.get() == 'bars':
-            exec_func = getattr(barplot, 'plot_barplots')
-        elif self.plot_type.get() == 'lines':
-            exec_func = getattr(lineplot, 'plot_lineplots')
-        elif self.plot_type.get() == 'histograms':
-            exec_func = getattr(histogram, 'plot_histograms')
-        else:
-            raise Exception(
-                f"Plot type {self.plot_type.get()} does not exist.")
-
-        if self.global_plotting_data is None:
-            status_label.config(
-                text="You need to hit save at least once before running!")
-            return
-
-        # loop over question blocks and produce one plot for each
-        # question block
-        for xx, plotting_data in tqdm(enumerate(self.global_plotting_data)):
-            exec_func(xx, self.global_plotting_data, self.ctx)
-        LOGGER.info("nice-plots finished without errors :)")
-        status_label.config(text="")
 
 
 class GUI:
@@ -295,7 +108,6 @@ class GUI:
                     Lb.insert(idx, os.path.basename(plot))
 
                 def callback(event=None):
-                    print("CALL")
                     if event is not None:
                         selection = event.widget.curselection()
                         if selection:
