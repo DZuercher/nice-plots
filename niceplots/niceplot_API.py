@@ -7,6 +7,7 @@ except ImportError:
 import os
 from tqdm import tqdm
 import pathlib
+import copy
 from niceplots import utils
 from niceplots import parser
 from niceplots import process
@@ -71,6 +72,8 @@ class niceplots_handles:
 
         # write to file
         self.codebook.to_csv(self.ctx['codebook_path'], index=False)
+
+        self.save(status_label)
         status_label.config(text="")
 
     def restore_code(self, status_label):
@@ -92,6 +95,7 @@ class niceplots_handles:
             # assign in loop otherswise copies variable address
             for idy in range(n_entries):
                 self.codebook_variables[col][idy].set(self.codebook[col][idy])
+        self.save(status_label)
         status_label.config(text="")
 
     def update_config(self, status_label):
@@ -120,6 +124,7 @@ class niceplots_handles:
         with open(self.ctx['config_file'], 'w') as f:
             f.writelines(config_file)
 
+        self.save(status_label)
         status_label.config(text="")
 
     def restore_config(self, status_label):
@@ -138,6 +143,7 @@ class niceplots_handles:
         for key in self.config_variables.keys():
             self.config_variables[key].set(self.ctx[key])
 
+        self.save(status_label)
         status_label.config(text="")
 
     def save(self, status_label):
@@ -195,5 +201,28 @@ class niceplots_handles:
         # question block
         for xx, plotting_data in tqdm(enumerate(self.global_plotting_data)):
             exec_func(xx, self.global_plotting_data, self.ctx)
+        LOGGER.info("nice-plots finished without errors :)")
+        status_label.config(text="")
+
+    def run_single(self, status_label, index):
+        """ Produces a single plot"""
+        status_label.config(text="Running...")
+        LOGGER.info("Producing your plots please wait...")
+        if self.plot_type.get() == 'bars':
+            exec_func = getattr(barplot, 'plot_barplots')
+        elif self.plot_type.get() == 'lines':
+            exec_func = getattr(lineplot, 'plot_lineplots')
+        elif self.plot_type.get() == 'histograms':
+            exec_func = getattr(histogram, 'plot_histograms')
+        else:
+            raise Exception(
+                f"Plot type {self.plot_type.get()} does not exist.")
+
+        if self.global_plotting_data is None:
+            status_label.config(
+                text="You need to hit save at least once before running!")
+            return
+
+        exec_func(index, self.global_plotting_data, self.ctx)
         LOGGER.info("nice-plots finished without errors :)")
         status_label.config(text="")
