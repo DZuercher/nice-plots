@@ -20,11 +20,8 @@ import tkinter.font as tkFont
 global LOGGER
 LOGGER = utils.init_logger(__file__)
 
-
-
-
 class GUI:
-    """ Handles GUI """
+    """ Handles niceplots GUI """
 
     def __init__(self):
         # set GUI scaling
@@ -44,123 +41,43 @@ class GUI:
         self.root.option_add("*Font", self.default_font)
 
     def config_gui(self, np_instance):
-
+        """ Configure the GUI """
+        
+        # initalize niceplots API instance
         self.np_instance = np_instance
 
-        # Multi Tab
+        # Multi Tab setup
         self.tabControl = ttk.Notebook(self.root)
         self.tabControl.pack(expand=True)
         self.general_tab = ttk.Frame(
             self.tabControl)
-        # padding=f"{3*self.scaling} {3*self.scaling} {12*self.scaling} {12*self.scaling}")
         self.config_tab = ttk.Frame(
             self.tabControl)
-        # padding=f"{3*self.scaling} {3*self.scaling} {12*self.scaling} {12*self.scaling}")
         self.code_tab = ttk.Frame(
             self.tabControl)
-        # padding=f"{3*self.scaling} {3*self.scaling} {12*self.scaling} {12*self.scaling}")
         self.preview_tab = ttk.Frame(
             self.tabControl)
-        # padding=f"{3*self.scaling} {3*self.scaling} {12*self.scaling} {12*self.scaling}")
-        # self.log_tab = ttk.Frame(
-        #    self.tabControl)
-        # padding=f"{3*self.scaling} {3*self.scaling} {12*self.scaling} {12*self.scaling}")
 
         self.general_tab.pack(fill='both', expand=True)
         self.config_tab.pack(fill='both', expand=True)
         self.code_tab.pack(fill='both', expand=True)
         self.preview_tab.pack(fill='both', expand=True)
-        # self.log_tab.pack(fill='both', expand=True)
 
         self.tabControl.add(self.general_tab, text='General')
         self.tabControl.add(self.config_tab, text='Config')
         self.tabControl.add(self.code_tab, text='Codebook')
         self.tabControl.add(self.preview_tab, text='Preview')
-        # self.tabControl.add(self.log_tab, text='Log')
 
         # bind such that each time tab becomes visible function is called
         self.config_tab.bind("<Visibility>", self.config_config_tab)
         self.code_tab.bind("<Visibility>", self.config_code_tab)
         self.preview_tab.bind("<Visibility>", self.config_preview_tab)
-        # self.log_tab.bind("<Visibility>", self.config_log_tab)
 
         # configure the tabs
-        # self.config_log_tab()
         self.config_general_tab()
         self.config_config_tab()
         self.config_code_tab()
         self.config_preview_tab()
-
-    def config_log_tab(self, event=None):
-        class ConsoleText(tkinter.Text):
-            '''A Tkinter Text widget that provides a scrolling display of console
-            stderr and stdout.'''
-            class IORedirector(object):
-                '''A general class for redirecting I/O to this Text widget.'''
-                def __init__(self,text_area):
-                    self.text_area = text_area
-
-            class StdoutRedirector(IORedirector):
-                '''A class for redirecting stdout to this Text widget.'''
-                def write(self,str):
-                    self.text_area.write(str,False)
-
-            class StderrRedirector(IORedirector):
-                '''A class for redirecting stderr to this Text widget.'''
-                def write(self,str):
-                    self.text_area.write(str,True)
-
-            def __init__(self, master=None, cnf={}, **kw):
-                '''See the __init__ for Tkinter.Text for most of this stuff.'''
-
-                tkinter.Text.__init__(self, master, cnf, **kw)
-
-                self.started = False
-                self.write_lock = threading.Lock()
-
-                self.tag_configure('STDOUT',background='white',foreground='black')
-                self.tag_configure('STDERR',background='white',foreground='red')
-
-                self.config(state=tkinter.NORMAL)
-                self.bind('<Key>',lambda e: 'break') #ignore all key presses
-
-            def start(self):
-
-                if self.started:
-                    return
-
-                self.started = True
-
-                self.original_stdout = sys.stdout
-                self.original_stderr = sys.stderr
-
-                stdout_redirector = ConsoleText.StdoutRedirector(self)
-                stderr_redirector = ConsoleText.StderrRedirector(self)
-
-                sys.stdout = stdout_redirector
-                sys.stderr = stderr_redirector
-
-            def stop(self):
-
-                if not self.started:
-                    return
-
-                self.started = False
-
-                sys.stdout = self.original_stdout
-                sys.stderr = self.original_stderr
-
-            def write(self,val,is_stderr=False):
-                self.write_lock.acquire()
-
-                self.insert('end',val,'STDERR' if is_stderr else 'STDOUT')
-                self.see('end')
-
-                self.write_lock.release()
-
-        self.console_log = ConsoleText(self.log_tab)
-        self.console_log.start()
-        self.console_log.grid(row=0, column=0, sticky=('W', 'E', 'N', 'S'))
 
     def config_preview_tab(self, event=None):
         if event is None:
@@ -169,14 +86,25 @@ class GUI:
                 self.preview_tab,
                 text="")
             self.preview_label.grid(
-                column=0, row=0, sticky='W')
+                column=0, row=0, columnspan=3, sticky='W')
             self.preview_tab_initalized = False
         if not self.preview_tab_initalized:
             if self.np_instance.global_plotting_data is None:
                 self.preview_label.config(
                     text="No plots to show yet. Press Save and Run in General tab first.")
+            elif len(glob.glob(
+                    self.np_instance.ctx['output_directory'] + '/*.' + self.np_instance.ctx['format'])) == 0:
+                self.preview_label.config(
+                    text="No plots to show yet. Press Save and Run in General tab first.")
             else:
-                self.preview_label.config(text="Preview")
+                # description
+                description = " Here you can have a look at how the plots look like. \n " \
+                "If you make changes to the configuration file or codebook you can hit Refresh \n " \
+                "and click on the plot name in the list again to get an updated view of the plot. \n " \
+                "Clicking Refresh All will rerun all the plots. \n " \
+                "Preview:"
+                self.preview_label.config(text=description)
+
                 self.preview_tab_initalized = True
 
                 Lb = tkinter.Listbox(self.preview_tab)
@@ -258,7 +186,12 @@ class GUI:
                 self.code_label.config(
                     text="Codebook not set yet. Press Save in General tab first.")
             else:
-                self.code_label.config(text="Codebook")
+                # description
+                description = " Here you can edit the entries in the codebook in the output directory that is used by nice-plots. \n " \
+                "Once you are done hit the Save button. \n " \
+                "If you want to restore the codebook defined in the default codebook file hit the Restore defaults button \n " \
+                "Codebook:"
+                self.code_label.config(text=description)
 
                 # add Scrollbars
                 def onFrameConfigure(canvas, frame):
@@ -336,6 +269,7 @@ class GUI:
 
     def config_config_tab(self, event=None):
         # Config Tab
+
         if event is None:
             # assume initialization
             self.config_label = ttk.Label(
@@ -349,7 +283,12 @@ class GUI:
                 self.config_label.config(
                     text="Configuration file not set yet. Press Save in General tab first.")
             else:
-                self.config_label.config(text="Options")
+                # description
+                description = " Here you can edit the entries in the config file in the output directory that is used by nice-plots. \n " \
+                "Once you are done hit the Save button. \n " \
+                "If you want to restore the settings defined in the default config file hit the Restore defaults button \n " \
+                "Options:"
+                self.config_label.config(text=description)
 
                 # add Scrollbar
                 def onFrameConfigure(canvas, frame):
@@ -406,62 +345,69 @@ class GUI:
                 self.config_status_label.grid(column=0, row=4, sticky='W')
 
     def config_general_tab(self):
-        # General Tab
-
-        # self.general_tab.grid(column=0, row=0, sticky=('N', 'W', 'E', 'S'))
-        # self.general_tab.grid_columnconfigure(0, weight=1)
-        # self.general_tab.grid_rowconfigure(0, weight=1)
-
+        # description
+        description = " Here you can set the paths to the files that nice-plots requires and choose the type of plots. \n " \
+        "Default config file: The config file will be produced based on the default config file. " \
+        "You can then edit the config file in the Config tab. \n " \
+        "Default codebook: The codebook will be produced based on the default codebook. " \
+        "You can then edit the codebook in the Codebook tab.\n " \
+        "Data path: Path to the tabular data. The data file is never touched or modified by nice-plots! \n " \
+        "Output directory: The directory where the plots will be created and the new config and codebook files are stored.\n " \
+        "Once you are done press Save. You can produce all plots by pressing the Run button."
+        
+        ttk.Label(self.general_tab, text=description).grid(
+            column=0, row=0, columnspan=3, sticky='W')
+        
         # default config file
         ttk.Label(self.general_tab, text="Default config file:").grid(
-            column=0, row=0, sticky='W')
+            column=0, row=1, sticky='W')
         default_config_entry = ttk.Entry(
             self.general_tab, width=40, textvariable=self.np_instance.default_config_path)
-        default_config_entry.grid(column=1, row=0)
+        default_config_entry.grid(column=1, row=1)
         default_config_button = tkinter.Button(
             self.general_tab,
             text="Browse",
             command=lambda: self.browse_button(self.np_instance.default_config_path, self.general_tab))
-        default_config_button.grid(row=0, column=2)
+        default_config_button.grid(row=1, column=2)
 
         # default codebook
         ttk.Label(self.general_tab, text="Default codebook:").grid(
-            column=0, row=1, sticky='W')
+            column=0, row=2, sticky='W')
         default_codebook_entry = ttk.Entry(
             self.general_tab, width=40, textvariable=self.np_instance.default_codebook_path)
-        default_codebook_entry.grid(column=1, row=1)
+        default_codebook_entry.grid(column=1, row=2)
         default_codebook_button = tkinter.Button(
             self.general_tab,
             text="Browse",
             command=lambda: self.browse_button(self.np_instance.default_codebook_path, self.general_tab))
-        default_codebook_button.grid(row=1, column=2)
+        default_codebook_button.grid(row=2, column=2)
 
         # data path
         ttk.Label(self.general_tab, text="Data path:").grid(
-            column=0, row=3, sticky='W')
+            column=0, row=4, sticky='W')
         data_entry = ttk.Entry(
             self.general_tab, width=40, textvariable=self.np_instance.data_path)
-        data_entry.grid(column=1, row=3)
+        data_entry.grid(column=1, row=4)
         data_button = tkinter.Button(
             self.general_tab,
             text="Browse",
             command=lambda: self.browse_button(self.np_instance.data_path, self.general_tab))
-        data_button.grid(row=3, column=2)
+        data_button.grid(row=4, column=2)
 
         # default output directory
         ttk.Label(self.general_tab, text="Output directory:").grid(
-            column=0, row=4, sticky='W')
+            column=0, row=5, sticky='W')
         default_codebook_entry = ttk.Entry(
             self.general_tab, width=40, textvariable=self.np_instance.output_dir)
-        default_codebook_entry.grid(column=1, row=4)
+        default_codebook_entry.grid(column=1, row=5)
         default_codebook_button = tkinter.Button(
             self.general_tab,
             text="Browse", command=lambda: self.browse_button(self.np_instance.output_dir, self.general_tab))
-        default_codebook_button.grid(row=4, column=2)
+        default_codebook_button.grid(row=5, column=2)
 
         # plot type selection
         ttk.Label(self.general_tab, text="Plot type:").grid(
-            column=0, row=5, sticky='W')
+            column=0, row=6, sticky='W')
         global plot_type
         plot_type = tkinter.StringVar()
         plot_type.set('bars')
@@ -471,27 +417,27 @@ class GUI:
                              variable=self.np_instance.plot_type, value='lines')
         g3 = ttk.Radiobutton(self.general_tab, text='Histogram',
                              variable=self.np_instance.plot_type, value='histograms')
-        g1.grid(column=1, row=5, sticky='W', padx=20)
-        g2.grid(column=1, row=6, sticky='W', padx=20)
-        g3.grid(column=1, row=7, sticky='W', padx=20)
+        g1.grid(column=1, row=6, sticky='W', padx=20)
+        g2.grid(column=1, row=7, sticky='W', padx=20)
+        g3.grid(column=1, row=8, sticky='W', padx=20)
 
         # save button
         create_out_dir_button = tkinter.Button(
             self.general_tab,
             text="Save",
             command=lambda: self.start_run('save', self.status_label))
-        create_out_dir_button.grid(row=8, column=0)
+        create_out_dir_button.grid(row=9, column=0)
 
         # run button
         create_out_dir_button = tkinter.Button(
             self.general_tab,
             text="Run",
             command=lambda: self.start_run('run', self.status_label))
-        create_out_dir_button.grid(row=8, column=1)
+        create_out_dir_button.grid(row=9, column=1)
 
         # status label
         self.status_label = ttk.Label(self.general_tab, text="")
-        self.status_label.grid(column=2, row=8, sticky='W')
+        self.status_label.grid(column=2, row=9, sticky='W')
 
         # some styling
         for child in self.general_tab.winfo_children():
@@ -523,3 +469,74 @@ class GUI:
         # start run function in new thread otherwise GUI freezes during execution
         exec = getattr(self.np_instance, name)
         Thread(target=exec, args=(status_label, index), daemon=True).start()
+
+    def config_log_tab(self, event=None):
+        class ConsoleText(tkinter.Text):
+            '''A Tkinter Text widget that provides a scrolling display of console
+            stderr and stdout.'''
+            class IORedirector(object):
+                '''A general class for redirecting I/O to this Text widget.'''
+                def __init__(self,text_area):
+                    self.text_area = text_area
+
+            class StdoutRedirector(IORedirector):
+                '''A class for redirecting stdout to this Text widget.'''
+                def write(self,str):
+                    self.text_area.write(str,False)
+
+            class StderrRedirector(IORedirector):
+                '''A class for redirecting stderr to this Text widget.'''
+                def write(self,str):
+                    self.text_area.write(str,True)
+
+            def __init__(self, master=None, cnf={}, **kw):
+                '''See the __init__ for Tkinter.Text for most of this stuff.'''
+
+                tkinter.Text.__init__(self, master, cnf, **kw)
+
+                self.started = False
+                self.write_lock = threading.Lock()
+
+                self.tag_configure('STDOUT',background='white',foreground='black')
+                self.tag_configure('STDERR',background='white',foreground='red')
+
+                self.config(state=tkinter.NORMAL)
+                self.bind('<Key>',lambda e: 'break') #ignore all key presses
+
+            def start(self):
+
+                if self.started:
+                    return
+
+                self.started = True
+
+                self.original_stdout = sys.stdout
+                self.original_stderr = sys.stderr
+
+                stdout_redirector = ConsoleText.StdoutRedirector(self)
+                stderr_redirector = ConsoleText.StderrRedirector(self)
+
+                sys.stdout = stdout_redirector
+                sys.stderr = stderr_redirector
+
+            def stop(self):
+
+                if not self.started:
+                    return
+
+                self.started = False
+
+                sys.stdout = self.original_stdout
+                sys.stderr = self.original_stderr
+
+            def write(self,val,is_stderr=False):
+                self.write_lock.acquire()
+
+                self.insert('end',val,'STDERR' if is_stderr else 'STDOUT')
+                self.see('end')
+
+                self.write_lock.release()
+
+        self.console_log = ConsoleText(self.log_tab)
+        self.console_log.start()
+        self.console_log.grid(row=0, column=0, sticky=('W', 'E', 'N', 'S'))

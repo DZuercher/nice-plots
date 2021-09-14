@@ -106,18 +106,34 @@ def main():
     ctx = parser.load_config(ARGS.config_path,
                              output_directory,
                              ARGS.output_name)
+    if isinstance(ctx, str):
+        LOGGER.error(ctx)
+        return
+
     ctx['format'] = ARGS.format
 
     LOGGER.info("Loading codebook...")
     codebook = parser.load_codebook(ctx, ARGS.codebook_path)
+    if isinstance(codebook, str):
+        LOGGER.error(codebook)
+        return
 
     LOGGER.info("Loading data...")
     data = parser.load_data(ctx, ARGS.data_path, codebook)
+    if isinstance(data, str):
+        LOGGER.error(data)
+        return
 
-    parser.check_config(ctx, codebook, data)
+    status = parser.check_config(ctx, codebook, data)
+    if len(status) > 0:
+        LOGGER.error(status)
+        return
 
     LOGGER.info("Processing input data...")
     global_plotting_data = process.process_data(data, codebook, ctx)
+    if isinstance(global_plotting_data, str):
+        LOGGER.error(global_plotting_data)
+        return
 
     LOGGER.info("Producing your plots please wait...")
     if ARGS.plot_type == 'bars':

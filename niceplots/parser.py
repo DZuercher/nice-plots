@@ -64,12 +64,11 @@ def check_config(ctx, codebook, data):
             try:
                 eval(f)
             except KeyError:
-                raise Exception(
-                    f"Unable to process filter entry {f}. ")
+                    return f"Unable to process filter entry {f}. "
             except SyntaxError:
-                raise Exception(
-                    f"Unable to process filter entry {f}. "
-                    f"Something with the Syntax is wrong.")
+                return f"Unable to process filter entry {f}. " \
+                       f"Something with the Syntax is wrong."
+    return ''
 
 
 def load_config(config_path, output_directory, output_name):
@@ -86,7 +85,11 @@ def load_config(config_path, output_directory, output_name):
     default_config_path = config_path
 
     with open(default_config_path, 'r') as f:
-        ctx = yaml.load(f, yaml.FullLoader)
+        try:
+            ctx = yaml.load(f, yaml.FullLoader)
+        except Exception as e:
+            status = f"Could not load default config file from path {default_config_path}. Error: {e}"
+            return status
     LOGGER.info(
         'Loaded default configuration file from {}'.format(default_config_path))
 
@@ -96,7 +99,11 @@ def load_config(config_path, output_directory, output_name):
         shutil.copyfile(config_path, output_config)
         LOGGER.info(f"Copied config file {config_path} -> {output_config}")
     with open(output_config, 'r') as f:
-        user_ctx = yaml.load(f, yaml.FullLoader)
+        try:
+            user_ctx = yaml.load(f, yaml.FullLoader)
+        except Exception as e:
+            status = f"Could not load config file from path {output_config}. Error: {e}"
+            return status
     LOGGER.info(
         f"Loaded user configuration file from {output_config}")
 
@@ -126,10 +133,9 @@ def check_codebook(codebook, ctx):
                         'mapping_label', 'missing_label']
     for col in required_columns:
         if ctx[col] not in codebook.columns:
-            raise Exception(
-                f"The column named {ctx[col]} corresponding to "
-                f"the {col} entry in the configuration file does not exist "
-                "in your codebook but is required by nice-plots. Aborting...")
+            return f"The column named {ctx[col]} corresponding to " \
+                f"the {col} entry in the configuration file does not exist " \
+                "in your codebook but is required by nice-plots. Aborting..."
 
     block_id_label = ctx['block_id_label']
     # define the variable blocks
@@ -161,33 +167,30 @@ def check_codebook(codebook, ctx):
                         m['label'] = label.strip()
                         ms.append(m)
                 except:
-                    raise Exception(
-                        f"Unable to process mapping {mapping}. Aborting...")
+                    return f"Unable to process mapping {mapping}. Aborting..."
                 for m in ms:
                     if not (isinstance(m['code'], int)):
-                        raise Exception(
-                            f"The code {m['code']} in mapping {mapping} "
-                            "is not an integer. Aborting.")
+                        return f"The code {m['code']} in mapping {mapping} " \
+                            "is not an integer. Aborting."
                     if not (m['code'] > 0):
-                        raise Exception(
-                            f"The code {m['code']} in mapping {mapping} "
-                            "must be an integer larger than 0. Aborting.")
+                        return f"The code {m['code']} in mapping {mapping} " \
+                            "must be an integer larger than 0. Aborting."
             mappings.append(ms)
         # check consistency
         for ii, m in enumerate(mappings):
             if m != mappings[0]:
-                raise Exception(
-                    f"Problem in Codebook for question block "
-                    f"{block_id}."
-                    f"The mappings for all variables in a question block must "
-                    f"be the same, but I found the two mappings \n \n"
-                    f"{codebook[ctx['name_label']][variable_indices[ii]]}:"
-                    f" \n"
-                    f"{m} \n \n and \n \n"
-                    f"{codebook[ctx['name_label']][variable_indices[0]]}:"
-                    f" \n"
-                    f"{mappings[0]} "
-                    f"\n \n to be unequal!")
+                return f"Problem in Codebook for question block " \
+                    f"{block_id}." \
+                    f"The mappings for all variables in a question block must " \
+                    f"be the same, but I found the two mappings \n \n" \
+                    f"{codebook[ctx['name_label']][variable_indices[ii]]}:" \
+                    f" \n" \
+                    f"{m} \n \n and \n \n" \
+                    f"{codebook[ctx['name_label']][variable_indices[0]]}:" \
+                    f" \n" \
+                    f"{mappings[0]} " \
+                    f"\n \n to be unequal!"
+    return ''
 
 
 def check_data(data, ctx, codebook):
@@ -202,9 +205,8 @@ def check_data(data, ctx, codebook):
     required_columns = codebook[ctx['name_label']]
     for col in required_columns:
         if col not in data.columns:
-            raise Exception(
-                f"The column named {col} defined in your codebook "
-                f"does not exist in your data. Aborting...")
+            return f"The column named {col} defined in your codebook " \
+                   f"does not exist in your data. Aborting..."
 
     # set all non numerical entries in data to NaN
     string_filter = data.applymap(isnumber)
@@ -231,13 +233,21 @@ def load_codebook(ctx, codebook_path):
     output_codebook_path = ctx['output_directory'] \
         + f"/codebook_{ctx['output_name']}.csv"
     if os.path.exists(output_codebook_path):
-        raw_codebook = pd.read_csv(output_codebook_path, keep_default_na=False,
-                                   sep=ctx['delimiter'], dtype='object')
+        try:
+            raw_codebook = pd.read_csv(output_codebook_path, keep_default_na=False,
+                                    sep=ctx['delimiter'], dtype='object')
+        except Exception as e:
+            status = f"Could not load codebook file from path {output_codebook_path}. Error: {e}"
+            return status
         initialize = False
         LOGGER.info(f"Loaded codebook from {output_codebook_path}")
     else:
-        raw_codebook = pd.read_csv(codebook_path, keep_default_na=False,
-                                   sep=ctx['delimiter'], dtype='object')
+        try:
+            raw_codebook = pd.read_csv(codebook_path, keep_default_na=False,
+                                    sep=ctx['delimiter'], dtype='object')
+        except Exception as e:
+            status = f"Could not load codebook file from path {codebook_path}. Error: {e}"
+            return status
         initialize = True
         LOGGER.info(f"Loaded codebook from {codebook_path}")
 
@@ -261,11 +271,17 @@ def load_codebook(ctx, codebook_path):
     for key in numeric_entries:
         codebook[key] = pd.to_numeric(codebook[key])
 
-    check_codebook(codebook, ctx)
+    status = check_codebook(codebook, ctx)
+    if len(status) > 0:
+        return status
 
     # write output codebook to the output directory
     if initialize:
-        codebook.to_csv(output_codebook_path, index=False)
+        try:
+            codebook.to_csv(output_codebook_path, index=False)
+        except Exception as e:
+            status = f"Could not save codebook file to path {output_codebook_path}. Error: {e}"
+            return status
         LOGGER.info(
             f"Copied codebook {codebook_path} -> {output_codebook_path}")
     return codebook
@@ -278,7 +294,11 @@ def load_data(ctx, data_path, codebook):
     :param data_path: Path to data file.
     :return : Data table
     """
-    raw_data = pd.read_csv(data_path, sep=ctx['delimiter'])
+    try:
+        raw_data = pd.read_csv(data_path, sep=ctx['delimiter'])
+    except Exception as e:
+        status = f"Could not load data file from path {data_path}. Error: {e}"
+        return status
     LOGGER.info(f"Loaded data table from file {data_path}")
 
     # potentially some pre-processing
