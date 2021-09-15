@@ -1,5 +1,6 @@
 # Authors: Dominik Zuercher, Valeria Glauser
-
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import math
@@ -93,7 +94,7 @@ def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars, dist,
     p_d = plotting_data[0]['meta']
 
     if 'bins' in p_d['mapping']:
-        # no labels for the colors given. 
+        # no labels for the colors given.
         # Instead add a numerical range for each color category.
         category_names = []
         lower = p_d['mapping']['bins'][:-1]
@@ -101,7 +102,7 @@ def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars, dist,
         category_names = [
             f'{math.ceil(ll)} - {math.floor(u)} {p_d["unit"]}'
             for ll, u in zip(lower, upper)]
-            
+
     elif '' in [p_d['mapping'][xx]['label'] for xx in range(len(p_d['mapping']))]:
         # no labels for the colors given.
         # instead just add the colorbar with a min and max label
@@ -127,13 +128,13 @@ def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars, dist,
                             boundaries=list(
                                 np.arange(0, len(p_d['mapping']) + 1)),
                             spacing='proportional', ticks=[])
-        
+
         # add min/max labels
         cax.text(-0.3, 0.5, p_d['mapping'][0]['label'],
                  va='center', ha='right', fontsize=ctx['fontsize_stats'])
         cax.text(len(p_d['mapping']) + 0.3, 0.5, p_d['mapping'][-1]['label'],
                  va='center', ha='left', fontsize=ctx['fontsize_stats'])
-        
+
         cbar.outline.set_visible(False)
         cax.set_ylim([0., 1.])
         return
@@ -246,7 +247,7 @@ def plot_barplots(xx, global_plotting_data, ctx):
     height = utils.inches_to_axispixels_size(ctx['height'], fig, ax, dim='y') # height of a single bar
     dist = utils.inches_to_axispixels_size(ctx['dist'], fig, ax, dim='y') # distance between two bars of same question
     major_dist = utils.inches_to_axispixels_size(ctx['major_dist'], fig, ax, dim='y') # distance between bars of different questions
-    label_pad = utils.inches_to_axispixels_size(ctx['padding'], fig, ax, dim='x') # distance between bar label and ??? 
+    label_pad = utils.inches_to_axispixels_size(ctx['padding'], fig, ax, dim='x') # distance between bar label and ???
     distance = major_dist + dist * (n_categories - 1) + n_categories * height # distance between bars of same category
 
 

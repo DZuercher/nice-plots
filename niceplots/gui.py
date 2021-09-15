@@ -42,7 +42,7 @@ class GUI:
 
     def config_gui(self, np_instance):
         """ Configure the GUI """
-        
+
         # initalize niceplots API instance
         self.np_instance = np_instance
 
@@ -131,8 +131,8 @@ class GUI:
                         pix = page.get_pixmap()
                         imgdata = pix.tobytes("ppm")  # extremely fast!, no PIL
                         photo = tkinter.PhotoImage(data=imgdata)
-                        self.preview_window.configure(image=photo) 
-                        self.preview_window.image = photo 
+                        self.preview_window.configure(image=photo)
+                        self.preview_window.image = photo
 
                     else:
                         self.viewer_index = tkinter.StringVar()
@@ -146,7 +146,7 @@ class GUI:
                         photo = tkinter.PhotoImage(data=imgdata)
 
                         self.preview_window = ttk.Label(self.preview_tab, image=photo)
-                        self.preview_window.image = photo 
+                        self.preview_window.image = photo
                         self.preview_window.grid(row=1, column=1, sticky=('W', 'E', 'N', 'S'))
 
                 Lb.bind("<<ListboxSelect>>", callback)
@@ -354,10 +354,10 @@ class GUI:
         "Data path: Path to the tabular data. The data file is never touched or modified by nice-plots! \n " \
         "Output directory: The directory where the plots will be created and the new config and codebook files are stored.\n " \
         "Once you are done press Save. You can produce all plots by pressing the Run button."
-        
+
         ttk.Label(self.general_tab, text=description).grid(
             column=0, row=0, columnspan=3, sticky='W')
-        
+
         # default config file
         ttk.Label(self.general_tab, text="Default config file:").grid(
             column=0, row=1, sticky='W')
@@ -422,7 +422,7 @@ class GUI:
         g3.grid(column=1, row=8, sticky='W', padx=20)
 
         # save button
-        create_out_dir_button = tkinter.Button(
+        create_out_dir_button = ttk.Button(
             self.general_tab,
             text="Save",
             command=lambda: self.start_run('save', self.status_label))

@@ -1,5 +1,6 @@
 # Authors: Dominik Zuercher, Valeria Glauser
-
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from niceplots import utils
@@ -25,10 +26,10 @@ def get_max_question_width(global_plotting_data, ctx):
     return label_width
 
 def get_histogram_type(n_questions, plotting_data, xx):
-    """Determine if the given data can be used to 
+    """Determine if the given data can be used to
     construct a single histogram or a binary histogram"""
 
-    single_histogram = False 
+    single_histogram = False
     multi_histogram = False
     if n_questions == 1:
         single_histogram = True
@@ -157,7 +158,7 @@ def add_bar_length_labels(fig, ax, n, bin_edges, ctx):
 
 def add_tick_labels(fig, ax, labels, label_ticks, ctx, global_plotting_data):
     """ Add labels to the histogram bars indicating the question or category name."""
-    
+
     mean_label_tick = np.mean(label_ticks)
 
     for ii in range(len(labels)):
