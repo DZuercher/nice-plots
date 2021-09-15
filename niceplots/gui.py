@@ -8,7 +8,8 @@ import glob
 import sys
 import threading
 from threading import Thread
-from tkPDFViewer import tkPDFViewer as pdf
+# from tkPDFViewer import tkPDFViewer as pdf
+import tkinter.filedialog
 
 try:
     import tkinter
@@ -24,21 +25,30 @@ class GUI:
     """ Handles niceplots GUI """
 
     def __init__(self):
-        # set GUI scaling
-        self.scaling = 2.0
         self.status_label = None
 
         # root window
         self.root = tkinter.Tk()
-        self.root.geometry('600x400+50+50')
+
+        # set GUI scaling
+        dpi = self.root.winfo_fpixels('1i')
+        if dpi > 80:
+            LOGGER.info("Assuming high definition. Setting GUI scaling to 2.0")
+            self.scaling = 2.0
+        else:
+            self.scaling = 1.0
+        self.root.tk.call('tk', 'scaling', self.scaling)
+
+        self.root.geometry('1000x500')
         self.root.title("nice-plots")
 
-        # set global font
-        self.default_font = tkFont.nametofont("TkDefaultFont")
-        self.default_font.configure(size=int(10 * self.scaling))
-
-        self.root.tk.call('tk', 'scaling', self.scaling)
+        # font
+        self.default_font = tkFont.Font(family="Arial",size=int(8 * self.scaling),weight="bold")
         self.root.option_add("*Font", self.default_font)
+        s = ttk.Style()
+        s.configure('TNotebook.Tab', font=('Arial',f'{int(8 * self.scaling)}','bold') )
+        s.configure("TRadiobutton", font = ("Arial", f'{int(8 * self.scaling)}', "bold"))
+        s.configure("TButton", font = ("Arial", f'{int(8 * self.scaling)}', "bold"))
 
     def config_gui(self, np_instance):
         """ Configure the GUI """
@@ -101,8 +111,8 @@ class GUI:
                 description = " Here you can have a look at how the plots look like. \n " \
                 "If you make changes to the configuration file or codebook you can hit Refresh \n " \
                 "and click on the plot name in the list again to get an updated view of the plot. \n " \
-                "Clicking Refresh All will rerun all the plots. \n " \
-                "Preview:"
+                "Clicking Refresh All will rerun all the plots. \n \n " \
+                "Preview: \n \n "
                 self.preview_label.config(text=description)
 
                 self.preview_tab_initalized = True
@@ -153,19 +163,23 @@ class GUI:
 
                 callback()
 
+                button_frame = tkinter.Frame(self.preview_tab)
+
                 # refresh button
-                single_refresh_button = tkinter.Button(
-                    self.preview_tab,
+                single_refresh_button = ttk.Button(
+                    button_frame,
                     text="Refresh",
                     command=lambda: self.start_single_refresh('run_single', self.preview_status_label, int(self.viewer_index.get())))
-                single_refresh_button.grid(row=2, column=0)
+                single_refresh_button.grid(row=0, column=0)
 
                 # run all button
-                refresh_button = tkinter.Button(
-                    self.preview_tab,
+                refresh_button = ttk.Button(
+                    button_frame,
                     text="Refresh All",
                     command=lambda: self.start_refresh('run', self.preview_status_label))
-                refresh_button.grid(row=3, column=0)
+                refresh_button.grid(row=0, column=1)
+
+                button_frame.grid(row=3, column=0, pady=self.scaling * 20)
 
                 self.preview_status_label = ttk.Label(
                     self.preview_tab, text="")
@@ -189,8 +203,8 @@ class GUI:
                 # description
                 description = " Here you can edit the entries in the codebook in the output directory that is used by nice-plots. \n " \
                 "Once you are done hit the Save button. \n " \
-                "If you want to restore the codebook defined in the default codebook file hit the Restore defaults button \n " \
-                "Codebook:"
+                "If you want to restore the codebook defined in the default codebook file hit the Restore defaults button. \n \n " \
+                "Codebook: \n \n "
                 self.code_label.config(text=description)
 
                 # add Scrollbars
@@ -230,38 +244,40 @@ class GUI:
 
                 # header
                 for idx, col in enumerate(self.np_instance.codebook):
-                    ttk.Label(frame, text=col).grid(row=0, column=idx)
+                    ttk.Label(frame, text=col).grid(row=0, column=idx, sticky=('W', 'E'))
 
                 # data
                 for idx, col in enumerate(self.np_instance.codebook):
                     data = self.np_instance.codebook[col]
                     if col == 'Index':
                         for idy in range(n_entries):
-                            ttk.Label(frame, text=data[idy]).grid(
-                                row=idy + 1, column=idx)
+                            ttk.Label(frame, text=data[idy]).grid(row=idy + 1, column=idx, sticky=('W', 'E'))
                     else:
                         for idy in range(n_entries):
                             entry = ttk.Entry(
                                 frame,
                                 textvariable=self.np_instance.codebook_variables[col][idy])
-                            entry.grid(row=idy + 1, column=idx,
-                                       sticky=('W', 'E'))
+                            entry.grid(row=idy + 1, column=idx, sticky=('W', 'E'))
                             self.np_instance.codebook_variables[col][idy].set(
                                 data[idy])
 
+                button_frame = ttk.Frame(self.code_tab)
+
                 # save button
-                save_button = tkinter.Button(
-                    self.code_tab,
+                save_button = ttk.Button(
+                    button_frame,
                     text="Save",
                     command=lambda: self.start_run('update_code', self.code_status_label))
-                save_button.grid(row=3, column=0)
 
                 # restore button
-                restore_button = tkinter.Button(
-                    self.code_tab,
+                restore_button = ttk.Button(
+                    button_frame,
                     text="Restore defaults",
                     command=lambda: self.start_run('restore_code', self.code_status_label))
-                restore_button.grid(row=4, column=0)
+
+                save_button.grid(row=0, column=0)
+                restore_button.grid(row=0, column=1)
+                button_frame.grid(row=4, column=0, sticky=('W'), pady=self.scaling * 20)
                 self.code_tab_initalized = True
 
                 self.code_status_label = ttk.Label(self.code_tab, text="")
@@ -275,8 +291,6 @@ class GUI:
             self.config_label = ttk.Label(
                 self.config_tab,
                 text="")
-            self.config_label.grid(
-                column=0, row=0, sticky='W')
             self.config_tab_initalized = False
         if not self.config_tab_initalized:
             if self.np_instance.ctx is None:
@@ -286,8 +300,8 @@ class GUI:
                 # description
                 description = " Here you can edit the entries in the config file in the output directory that is used by nice-plots. \n " \
                 "Once you are done hit the Save button. \n " \
-                "If you want to restore the settings defined in the default config file hit the Restore defaults button \n " \
-                "Options:"
+                "If you want to restore the settings defined in the default config file hit the Restore defaults button \n \n " \
+                "Options: \n \n "
                 self.config_label.config(text=description)
 
                 # add Scrollbar
@@ -300,8 +314,7 @@ class GUI:
                 vsb = tkinter.Scrollbar(
                     self.config_tab, orient="vertical", command=canvas.yview, width=40)
                 canvas.configure(yscrollcommand=vsb.set)
-                vsb.grid(row=1, column=1, sticky=('N', 'S', 'W', 'E'))
-                canvas.grid(row=1, column=0, sticky=('W', 'E'))
+                canvas.grid(row=1, column=0, sticky=('W'))
                 canvas.create_window((4, 4), window=frame, anchor="nw")
                 frame.bind("<Configure>", lambda event,
                            canvas=canvas: onFrameConfigure(canvas, frame))
@@ -317,97 +330,94 @@ class GUI:
                     ttk.Label(frame, text=key).grid(
                         column=0, row=counter, sticky='W')
 
-                    self.np_instance.config_variables[key] = tkinter.StringVar(
-                    )
+                    self.np_instance.config_variables[key] = tkinter.StringVar()
                     self.np_instance.config_variables[key].set(
                         self.np_instance.ctx[key])
                     ttk.Entry(
                         frame, width=40,
-                        textvariable=self.np_instance.config_variables[key]).grid(column=1, row=counter)
+                        textvariable=self.np_instance.config_variables[key]).grid(column=1, row=counter, sticky='E')
                     counter += 1
 
+                button_frame = ttk.Frame(self.config_tab)
+
                 # save button
-                save_button = tkinter.Button(
-                    self.config_tab,
+                save_button = ttk.Button(
+                    button_frame,
                     text="Save",
                     command=lambda: self.start_run('update_config', self.config_status_label))
-                save_button.grid(row=2, column=0)
 
                 # restore button
-                restore_button = tkinter.Button(
-                    self.config_tab,
+                restore_button = ttk.Button(
+                    button_frame,
                     text="Restore defaults",
                     command=lambda: self.start_run('restore_config', self.config_status_label))
-                restore_button.grid(row=3, column=0)
                 self.config_tab_initalized = True
 
                 self.config_status_label = ttk.Label(self.config_tab, text="")
+
+                # placing
+                self.config_label.grid(column=0, row=0, columnspan=3, sticky='W')
+                vsb.grid(row=1, column=1, sticky=('N', 'S', 'W')) # scrollbar
+                button_frame.grid(row=2, column=0, sticky='W')
+                save_button.grid(row=0, column=0)
+                restore_button.grid(row=0, column=1)
                 self.config_status_label.grid(column=0, row=4, sticky='W')
+
+                # some styling
+                for child in self.general_tab.winfo_children():
+                    child.grid_configure(padx=self.scaling, pady=self.scaling)
+                button_frame.grid_configure(pady=self.scaling * 20)
 
     def config_general_tab(self):
         # description
-        description = " Here you can set the paths to the files that nice-plots requires and choose the type of plots. \n " \
-        "Default config file: The config file will be produced based on the default config file. " \
+        description = " Here you can set the paths to the files that nice-plots requires and choose the type of plots. \n \n " \
+        "Default config file: The config file will be produced based on the default config file. \n " \
         "You can then edit the config file in the Config tab. \n " \
-        "Default codebook: The codebook will be produced based on the default codebook. " \
+        "Default codebook: The codebook will be produced based on the default codebook. \n " \
         "You can then edit the codebook in the Codebook tab.\n " \
         "Data path: Path to the tabular data. The data file is never touched or modified by nice-plots! \n " \
-        "Output directory: The directory where the plots will be created and the new config and codebook files are stored.\n " \
-        "Once you are done press Save. You can produce all plots by pressing the Run button."
-
-        ttk.Label(self.general_tab, text=description).grid(
-            column=0, row=0, columnspan=3, sticky='W')
-
+        "Output directory: The directory where the plots will be created and the new config and codebook files are stored.\n \n " \
+        "Once you are done press Save. You can produce all plots by pressing the Run button. \n \n "
+        
+        desc_label = ttk.Label(self.general_tab, text=description)
+        
         # default config file
-        ttk.Label(self.general_tab, text="Default config file:").grid(
-            column=0, row=1, sticky='W')
+        label1 = ttk.Label(self.general_tab, text="Default config file:")
         default_config_entry = ttk.Entry(
             self.general_tab, width=40, textvariable=self.np_instance.default_config_path)
-        default_config_entry.grid(column=1, row=1)
-        default_config_button = tkinter.Button(
+        default_config_button = ttk.Button(
             self.general_tab,
             text="Browse",
             command=lambda: self.browse_button(self.np_instance.default_config_path, self.general_tab))
-        default_config_button.grid(row=1, column=2)
 
         # default codebook
-        ttk.Label(self.general_tab, text="Default codebook:").grid(
-            column=0, row=2, sticky='W')
+        label2 = ttk.Label(self.general_tab, text="Default codebook:")
         default_codebook_entry = ttk.Entry(
             self.general_tab, width=40, textvariable=self.np_instance.default_codebook_path)
-        default_codebook_entry.grid(column=1, row=2)
-        default_codebook_button = tkinter.Button(
+        default_codebook_button = ttk.Button(
             self.general_tab,
             text="Browse",
             command=lambda: self.browse_button(self.np_instance.default_codebook_path, self.general_tab))
-        default_codebook_button.grid(row=2, column=2)
 
         # data path
-        ttk.Label(self.general_tab, text="Data path:").grid(
-            column=0, row=4, sticky='W')
+        label3 = ttk.Label(self.general_tab, text="Data path:")
         data_entry = ttk.Entry(
             self.general_tab, width=40, textvariable=self.np_instance.data_path)
-        data_entry.grid(column=1, row=4)
-        data_button = tkinter.Button(
+        data_button = ttk.Button(
             self.general_tab,
             text="Browse",
             command=lambda: self.browse_button(self.np_instance.data_path, self.general_tab))
-        data_button.grid(row=4, column=2)
 
         # default output directory
-        ttk.Label(self.general_tab, text="Output directory:").grid(
-            column=0, row=5, sticky='W')
-        default_codebook_entry = ttk.Entry(
+        label4 = ttk.Label(self.general_tab, text="Output directory:")
+        default_output_entry = ttk.Entry(
             self.general_tab, width=40, textvariable=self.np_instance.output_dir)
-        default_codebook_entry.grid(column=1, row=5)
-        default_codebook_button = tkinter.Button(
+        default_output_button = ttk.Button(
             self.general_tab,
             text="Browse", command=lambda: self.browse_button(self.np_instance.output_dir, self.general_tab))
-        default_codebook_button.grid(row=5, column=2)
 
         # plot type selection
-        ttk.Label(self.general_tab, text="Plot type:").grid(
-            column=0, row=6, sticky='W')
+        label5 = ttk.Label(self.general_tab, text="Plot type:")
         global plot_type
         plot_type = tkinter.StringVar()
         plot_type.set('bars')
@@ -417,31 +427,56 @@ class GUI:
                              variable=self.np_instance.plot_type, value='lines')
         g3 = ttk.Radiobutton(self.general_tab, text='Histogram',
                              variable=self.np_instance.plot_type, value='histograms')
+
+        button_frame = tkinter.Frame(self.general_tab)
+
+        # save button
+        save_button = ttk.Button(
+            button_frame,
+            text="Save",
+            command=lambda: self.start_run('save', self.status_label))
+
+        # run button
+        run_button = ttk.Button(
+            button_frame,
+            text="Run",
+            command=lambda: self.start_run('run', self.status_label))
+
+        # status label
+        self.status_label = ttk.Label(self.general_tab, text="")
+
+        # placing
+        desc_label.grid(column=0, row=0, columnspan=4, sticky='W')
+        label1.grid(column=0, row=1, sticky='W')
+        label2.grid(column=0, row=2, sticky='W')
+        label3.grid(column=0, row=4, sticky='W')
+        label4.grid(column=0, row=5, sticky='W')
+        label5.grid(column=0, row=6, sticky='W')
+
+        default_config_entry.grid(column=1, row=1, sticky='W')
+        default_codebook_entry.grid(column=1, row=2, sticky='W')
+        data_entry.grid(column=1, row=4, sticky='W')
+        default_output_entry.grid(column=1, row=5, sticky='W')
+
+        default_config_button.grid(row=1, column=2, sticky='W')
+        default_codebook_button.grid(row=2, column=2, sticky='W')
+        data_button.grid(row=4, column=2, sticky='W')
+        default_output_button.grid(row=5, column=2, sticky='W')
+
         g1.grid(column=1, row=6, sticky='W', padx=20)
         g2.grid(column=1, row=7, sticky='W', padx=20)
         g3.grid(column=1, row=8, sticky='W', padx=20)
 
-        # save button
-        create_out_dir_button = ttk.Button(
-            self.general_tab,
-            text="Save",
-            command=lambda: self.start_run('save', self.status_label))
-        create_out_dir_button.grid(row=9, column=0)
-
-        # run button
-        create_out_dir_button = tkinter.Button(
-            self.general_tab,
-            text="Run",
-            command=lambda: self.start_run('run', self.status_label))
-        create_out_dir_button.grid(row=9, column=1)
-
-        # status label
-        self.status_label = ttk.Label(self.general_tab, text="")
         self.status_label.grid(column=2, row=9, sticky='W')
+
+        button_frame.grid(row=9, column=0, sticky='W')
+        save_button.grid(row=0, column=0, sticky='W')
+        run_button.grid(row=0, column=1, sticky='E')
+
 
         # some styling
         for child in self.general_tab.winfo_children():
-            child.grid_configure(padx=5 * self.scaling, pady=5 * self.scaling)
+            child.grid_configure(padx=self.scaling, pady=self.scaling)
 
         # set focus
         default_config_entry.focus()
