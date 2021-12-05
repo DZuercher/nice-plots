@@ -34,6 +34,7 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python :: 3.7",
     ],
+    python_requires=[">=3.7"],
     entry_points={
         'console_scripts': [
             "nice-plots = niceplots.main:main"

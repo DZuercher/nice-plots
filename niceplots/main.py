@@ -5,6 +5,7 @@ from niceplots import process
 from niceplots import barplot
 from niceplots import lineplot
 from niceplots import histogram
+from niceplots import timeline
 from niceplots import utils
 import os
 from tqdm import tqdm
@@ -47,9 +48,11 @@ def main():
     cli_args.add_argument('--config_path', type=str, action='store',
                           default='example_config.yml',
                           help='Valid path to the configuration file')
-    cli_args.add_argument('--data_path', type=str, action='store',
-                          default='example_data.csv',
-                          help='Valid path to the data file')
+    cli_args.add_argument('--data_path', type=str, nargs='+', action='store',
+                          default=['example_data.csv'],
+                          help='Valid path to the data file, or list of such paths')
+    cli_args.add_argument('--time_labels', type=str, nargs='*', default=[''], action='store',
+                          help='Labels for the different data sets (only if timeline).')
     cli_args.add_argument('--codebook_path', type=str, action='store',
                           default='example_codebook.csv',
                           help='Valid path to the codebook file')
@@ -62,12 +65,13 @@ def main():
                           "specified by the CLI.")
     cli_args.add_argument('--plot_type', type=str, action='store',
                           default='bars', choices=['bars', 'lines',
-                                                   'histograms'],
-                          help='Type of plots to produce')
+                                                   'histograms', 'timeline'],
+                          help='Type of plots to produce. '
+                          'If timeline expects a list of data_paths and also time_labels')
     cli_args.add_argument('--serial', action='store_true',
                           default=True,
                           help='If True nice-plots runs in serial mode '
-                          'instead of parallel.')
+                          'instead of parallel (parallel only works on Linux). Parallel mode is deprecated.')
     cli_args.add_argument('--format', type=str, action='store',
                           default='pdf', choices=['pdf', 'svg', 'png'],
                           help='Format of the output plots.')
@@ -75,6 +79,13 @@ def main():
     LOGGER.info("Starting nice-plots")
 
     ARGS = cli_args.parse_args()
+
+    if ARGS.plot_type == 'timeline':
+        if not len(ARGS.time_labels) == len(ARGS.data_path):
+            raise Exception(
+                "Can only make time series plot if same number "
+                "of labels and data sets provided.")
+
     LOGGER.info("CLI arguments parsed")
 
     if not ARGS.serial:
@@ -119,21 +130,32 @@ def main():
         return
 
     LOGGER.info("Loading data...")
-    data = parser.load_data(ctx, ARGS.data_path, codebook)
-    if isinstance(data, str):
-        LOGGER.error(data)
-        return
+    datas = {}
+    for path, label in zip(ARGS.data_path, ARGS.time_labels):
+        data = parser.load_data(ctx, path, codebook)
+        if isinstance(data, str):
+            LOGGER.error(data)
+            return
+        datas[label] = data
 
-    status = parser.check_config(ctx, codebook, data)
-    if len(status) > 0:
-        LOGGER.error(status)
-        return
+    for data in datas.values():
+        status = parser.check_config(ctx, codebook, data)
+        if len(status) > 0:
+            LOGGER.error(status)
+            return
 
     LOGGER.info("Processing input data...")
-    global_plotting_data = process.process_data(data, codebook, ctx)
-    if isinstance(global_plotting_data, str):
-        LOGGER.error(global_plotting_data)
-        return
+    global_plotting_datas = {}
+    for label, data in datas.items():
+        global_plotting_datas[label] = process.process_data(data, codebook, ctx)
+        if isinstance(global_plotting_datas[label], str):
+            LOGGER.error(global_plotting_datas[label])
+            return
+
+    n_blocks = len(global_plotting_datas[list(global_plotting_datas.keys())[0]])
+
+    if ARGS.plot_type != 'timeline':
+        global_plotting_datas = global_plotting_datas[list(global_plotting_datas.keys())[0]]
 
     LOGGER.info("Producing your plots please wait...")
     if ARGS.plot_type == 'bars':
@@ -142,21 +164,24 @@ def main():
         exec_func = getattr(lineplot, 'plot_lineplots')
     elif ARGS.plot_type == 'histograms':
         exec_func = getattr(histogram, 'plot_histograms')
+    elif ARGS.plot_type == 'timeline':
+        exec_func = getattr(timeline, 'plot_timelines')
     else:
         raise Exception(f"Plot type {ARGS.plot_type} does not exist.")
 
     if not ARGS.serial:
         LOGGER.info("Running in parallel mode")
+        LOGGER.warn("DEPRECATED")
         with Pool() as p:
             p.map(
-                partial(exec_func, global_plotting_data, ctx=ctx),
-                list(range(len(global_plotting_data))))
+                partial(exec_func, global_plotting_datas, ctx=ctx),
+                list(range(len(global_plotting_datas))))
     else:
         LOGGER.info("Running in serial mode")
         # loop over question blocks and produce one plot for each
         # question block
-        for xx, plotting_data in tqdm(enumerate(global_plotting_data)):
-            exec_func(xx, global_plotting_data, ctx)
+        for xx in tqdm(range(n_blocks)):
+            exec_func(xx, global_plotting_datas, ctx)
 
     LOGGER.info("nice-plots finished without errors :)")
 
