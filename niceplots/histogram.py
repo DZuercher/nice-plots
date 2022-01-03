@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from niceplots import utils
 from niceplots import lineplot
-
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def get_max_question_width(global_plotting_data, ctx):

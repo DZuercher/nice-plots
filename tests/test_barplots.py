@@ -1,6 +1,6 @@
+from niceplots import barplot
 from niceplots import parser
 from niceplots import process
-from niceplots import barplot
 import os
 import pathlib
 import shutil

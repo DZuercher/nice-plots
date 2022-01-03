@@ -4,8 +4,8 @@ import numpy as np
 from niceplots import utils
 from niceplots import parser
 from tqdm import tqdm
-
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def parse_mapping(data, mapping, var_name, ctx, nbins):

@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 from niceplots import utils
+import logging
+LOGGER = logging.getLogger(__name__)
 
-LOGGER = utils.init_logger(__file__)
 
 def plot_timelines(xx, global_plotting_datas, ctx):
     plotting_datas = {}

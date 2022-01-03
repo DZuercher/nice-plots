@@ -18,8 +18,8 @@ except ImportError:
 from tkinter import ttk
 import tkinter.font as tkFont
 
-global LOGGER
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 class GUI:
     """ Handles niceplots GUI """

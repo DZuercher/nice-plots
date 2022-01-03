@@ -15,8 +15,8 @@ from niceplots import barplot
 from niceplots import lineplot
 from niceplots import histogram
 
-global LOGGER
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 class niceplots_handles:
     """ Holds nice plots objects """

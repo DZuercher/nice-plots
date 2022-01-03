@@ -37,7 +37,7 @@ setup(
     python_requires=">=3.7",
     entry_points={
         'console_scripts': [
-            "nice-plots = niceplots.main:main"
+            "nice-plots = niceplots.main:main_cli"
         ]
     }
 )

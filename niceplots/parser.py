@@ -6,11 +6,16 @@ import pandas as pd
 import shutil
 from niceplots import utils
 import numpy as np
-
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def isnumber(x):
+    """
+    Checks if string x is a numercial number.
+    :param x: String to check.
+    :return : Returns true if x is a number and False otherwise.
+    """
     try:
         float(x)
         return True
@@ -19,6 +24,13 @@ def isnumber(x):
 
 
 def get_filter_from_string(f, variables):
+    """
+    Replaces the variable names in the string f that encodes the
+    filter expressions to obtain valid filter expressions.
+    :param f: String encoding the filters.
+    :param variables: The different variable names used in the data.
+    :return : Modified version of string f.
+    """
     for var in reversed(sorted(variables, key=len)):
         ii = 0
         while 1:
@@ -47,9 +59,10 @@ def get_filter_from_string(f, variables):
 def check_config(ctx, codebook, data):
     """
     Checks if all attributes of the configuration instance are valid.
+    Note: data is used to evaluate the filter expressions.
     :param ctx: Directory with configuration objects.
-    :param codebook: Codebook
-    :param data: Data array
+    :param codebook: Codebook (pandas data frame)
+    :param data: Data (pandas data frame)
     """
     # check that filters are correct
     filters = ctx['filters']
@@ -59,12 +72,13 @@ def check_config(ctx, codebook, data):
     else:
         for f_name in list(filters.keys()):
             f = filters[f_name]
-            # attempt to replace all variable names
+            # attempt to replace all variable names in filter expressions
             f = get_filter_from_string(f, codebook[ctx['name_label']])
             try:
                 eval(f)
             except KeyError:
-                    return f"Unable to process filter entry {f}. "
+                    return f"Unable to process filter entry {f} in your config file. " \
+                    f"Some variables seem to not be present in your data."
             except SyntaxError:
                 return f"Unable to process filter entry {f}. " \
                        f"Something with the Syntax is wrong."
@@ -73,62 +87,68 @@ def check_config(ctx, codebook, data):
 
 def load_config(config_path, output_directory, output_name):
     """
-    Loads the default config file from config directory.
-    Arguments can be overriden by a user defined config file.
-    The validity of the passed arguments is checked.
-    :param config_path: Path to the user defined config file.
+    Loads the default config file from config_path.
+    Overrides with values from local config file in output_directory.
+    Creates the local config file in output_directory if it does not exist already.
+    :param config_path: Path to the default config file.
     :param output_directory: Output directory.
-    :return : Directory with configuration objects.
+    :return : Directory holding config values.
     """
 
     # load default config
     default_config_path = config_path
-
     with open(default_config_path, 'r') as f:
         try:
             ctx = yaml.load(f, yaml.FullLoader)
         except Exception as e:
             status = f"Could not load default config file from path {default_config_path}. Error: {e}"
             return status
-    LOGGER.info(
-        'Loaded default configuration file from {}'.format(default_config_path))
+    LOGGER.debug('Loaded default configuration file from {}'.format(default_config_path))
 
-    # check if config in output directory already exists
-    output_config = output_directory + '/config_{}.yml'.format(output_name)
+    # check if config in output directory already exists, create otherwise
+    output_config = f'{output_directory}/config_{output_name}.yml'
     if not os.path.exists(output_config):
         shutil.copyfile(config_path, output_config)
-        LOGGER.info(f"Copied config file {config_path} -> {output_config}")
+        LOGGER.info(f"Copied default config file to output directory: {config_path} -> {output_config}")
+
+    # load output config file
     with open(output_config, 'r') as f:
         try:
             user_ctx = yaml.load(f, yaml.FullLoader)
         except Exception as e:
             status = f"Could not load config file from path {output_config}. Error: {e}"
             return status
-    LOGGER.info(
-        f"Loaded user configuration file from {output_config}")
+    LOGGER.info(f"Using configuration file in: {output_config}")
 
     # override defaults
     for obj in user_ctx:
         if obj in ctx:
-            LOGGER.info(
-                "Overriding default value of argument "
+            LOGGER.debug(
+                "Overriding default value of config argument "
                 f"{obj} -> {user_ctx[obj]}")
             ctx[obj] = user_ctx[obj]
 
+    # add some extra variables 
     ctx['output_name'] = output_name
     ctx['config_file'] = output_config
     ctx['output_directory'] = output_directory
+
+    LOGGER.debug("++++++++++++++++ CONFIG ++++++++++++++++")
+    for item in ctx.items():
+        LOGGER.debug(f"{item[0]} : {item[1]}")
+    LOGGER.debug("++++++++++++++++++++++++++++++++")
+
     return ctx
 
 
 def check_codebook(codebook, ctx):
     """
     Checks validity of codebook.
-    :param codebook: The codebook that should be checked.
+    :param codebook: The codebook that should be checked (pandas data frame).
     :param ctx: Configuration instance.
     """
 
-    # check that all required columns are there
+    # check that all required columns exist
     required_columns = ['block_id_label', 'question_label', 'name_label',
                         'mapping_label', 'missing_label']
     for col in required_columns:
@@ -167,21 +187,22 @@ def check_codebook(codebook, ctx):
                         m['label'] = label.strip()
                         ms.append(m)
                 except:
-                    return f"Unable to process mapping {mapping}. Aborting..."
+                    return f"Unable to process code mapping {mapping}. Aborting..."
                 for m in ms:
                     if not (isinstance(m['code'], int)):
-                        return f"The code {m['code']} in mapping {mapping} " \
+                        return f"The code {m['code']} in code mapping {mapping} in your codebook" \
                             "is not an integer. Aborting."
                     if not (m['code'] > 0):
-                        return f"The code {m['code']} in mapping {mapping} " \
+                        return f"The code {m['code']} in code mapping {mapping} in your codebook" \
                             "must be an integer larger than 0. Aborting."
             mappings.append(ms)
-        # check consistency
+
+        # check consistency throughout the question black
         for ii, m in enumerate(mappings):
             if m != mappings[0]:
                 return f"Problem in Codebook for question block " \
                     f"{block_id}." \
-                    f"The mappings for all variables in a question block must " \
+                    f"The code mappings for all variables in a question block must " \
                     f"be the same, but I found the two mappings \n \n" \
                     f"{codebook[ctx['name_label']][variable_indices[ii]]}:" \
                     f" \n" \
@@ -195,13 +216,14 @@ def check_codebook(codebook, ctx):
 
 def check_data(data, ctx, codebook):
     """
-    Checks validity of data.
-    :param data: The data that should be checked.
+    Checks validity of data and removes non-numerical entries.
+    :param data: The data that should be checked (pandas data frame).
     :param ctx: Configuration instance.
-    :param codebook: The codebook.
+    :param codebook: The codebook (pandas data frame).
+    :return : Processed data table
     """
 
-    # check that required columns are there
+    # check that required columns exist
     required_columns = codebook[ctx['name_label']]
     for col in required_columns:
         if col not in data.columns:
@@ -237,41 +259,42 @@ def check_data(data, ctx, codebook):
                 d = np.asarray(d, dtype=int)
                 check = np.all((d >= np.min(ms)) & (d <= np.max(ms)))
                 if not check:
-                    raise ValueError(f"Some values in your data for variable {codebook[ctx['Variable']][var]} are outside of the range specified in the codebook.")
+                    raise ValueError(
+                        f"Some values in your data for variable {codebook[ctx['Variable']][var]} "
+                        f"are outside of the range specified in the codebook.")
     return data
 
 
 def load_codebook(ctx, codebook_path):
     """
     Load and preprocess the codebook. If it exists loads the codebook from
-    the output directory. Finished codebook gets written to the output
-    directory. The codebook gets checked for its validity.
+    the output directory. Otherwise create it from the global one.
+    The codebook gets checked for its validity.
     :param ctx: Configuration instance.
     :param codebook_path: Path to codebook file.
-    :return : Codebook
+    :return : Codebook (pandas data frame)
     """
 
     # check if there is already a codebook in the output directory
-    output_codebook_path = ctx['output_directory'] \
-        + f"/codebook_{ctx['output_name']}.csv"
+    output_codebook_path = f"{ctx['output_directory']}/codebook_{ctx['output_name']}.csv"
     if os.path.exists(output_codebook_path):
         try:
-            raw_codebook = pd.read_csv(output_codebook_path, keep_default_na=False,
+            codebook = pd.read_csv(output_codebook_path, keep_default_na=False,
                                     sep=ctx['delimiter'], dtype='object')
         except Exception as e:
             status = f"Could not load codebook file from path {output_codebook_path}. Error: {e}"
             return status
         initialize = False
-        LOGGER.info(f"Loaded codebook from {output_codebook_path}")
     else:
+        LOGGER.debug(f"Did not find a local codebook in {output_codebook_path}. Creating from global one.")
         try:
-            raw_codebook = pd.read_csv(codebook_path, keep_default_na=False,
+            codebook = pd.read_csv(codebook_path, keep_default_na=False,
                                     sep=ctx['delimiter'], dtype='object')
         except Exception as e:
             status = f"Could not load codebook file from path {codebook_path}. Error: {e}"
             return status
         initialize = True
-        LOGGER.info(f"Loaded codebook from {codebook_path}")
+        LOGGER.debug(f"Loaded global codebook from: {codebook_path}")
 
     # add some additional columns to the codebook
     additional_codebook_entries = ['color_scheme', 'invert', 'nbins', 'unit',
@@ -280,11 +303,11 @@ def load_codebook(ctx, codebook_path):
     if initialize:
         # add the plotting options columns to the codebook
         for key in additional_codebook_entries:
-            raw_codebook[key + " - nice-plots"] = ctx[key]
-            LOGGER.info(f"Added additional column {key} - nice-plots to "
-                        f"codebook. Initialized with value {ctx[key]}")
+            codebook[key + " - nice-plots"] = ctx[key]
+            LOGGER.debug(f"Added additional column {key} - nice-plots to "
+                        f"codebook. Initialized with value {ctx[key]}.")
 
-    codebook = raw_codebook
+    # add codebook realted variables to config instance
     ctx['codebook_path'] = output_codebook_path
     ctx['additional_codebook_entries'] = additional_codebook_entries
 
@@ -293,6 +316,7 @@ def load_codebook(ctx, codebook_path):
     for key in numeric_entries:
         codebook[key] = pd.to_numeric(codebook[key])
 
+    # check validity
     status = check_codebook(codebook, ctx)
     if len(status) > 0:
         return status
@@ -304,27 +328,27 @@ def load_codebook(ctx, codebook_path):
         except Exception as e:
             status = f"Could not save codebook file to path {output_codebook_path}. Error: {e}"
             return status
-        LOGGER.info(
-            f"Copied codebook {codebook_path} -> {output_codebook_path}")
+        LOGGER.debug(
+            f"Copied global codebook to local: {codebook_path} -> {output_codebook_path}")
+    LOGGER.info(f"Using codebook in: {output_codebook_path}")
     return codebook
 
 
 def load_data(ctx, data_path, codebook):
     """
-    Load and preprocess the data table.
+    Load and preprocess the data table from data_path.
     :param ctx: Configuration instance.
     :param data_path: Path to data file.
-    :return : Data table
+    :param codebook: The codebook (pandas data frame)
+    :return : Data table (pandas data frame)
     """
     try:
-        raw_data = pd.read_csv(data_path, sep=ctx['delimiter'])
+        data = pd.read_csv(data_path, sep=ctx['delimiter'])
     except Exception as e:
         status = f"Could not load data file from path {data_path}. Error: {e}"
         return status
-    LOGGER.info(f"Loaded data table from file {data_path}")
+    LOGGER.info(f"Using data table in: {data_path}")
 
-    # potentially some pre-processing
-    data = raw_data
-
+    # check validity and replace non-numerical entries
     data = check_data(data, ctx, codebook)
     return data
