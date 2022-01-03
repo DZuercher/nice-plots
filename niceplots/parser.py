@@ -212,10 +212,32 @@ def check_data(data, ctx, codebook):
     string_filter = data.applymap(isnumber)
     num_strings = np.asarray(string_filter).size \
         - np.sum(np.asarray(string_filter))
-    LOGGER.warning(f"Found {num_strings} non-numerical values in "
-                   "your data. Setting them to NaN.")
+    if num_strings > 0:
+        LOGGER.warning(f"Found {num_strings} non-numerical values in "
+                    "your data. Setting them to NaN.")
     data = data[string_filter]
     data = data.applymap(float)
+
+    # check that data is in the range required by mappings
+    block_id_label = ctx['block_id_label']
+    block_ids = np.asarray(codebook[block_id_label], dtype=int)
+    for block_id in np.unique(block_ids[block_ids >= 0]):
+        variable_indices = np.where(block_ids == block_id)[0]
+        mapping = codebook[ctx['mapping_label']][variable_indices[0]]
+        if mapping.strip() == 'none':
+            continue
+        else:
+            mappings_ = mapping.split('\n')
+            ms = []
+            for ma in mappings_:
+                code = int(ma.split('=')[0])
+                ms.append(code)
+            for var in variable_indices:
+                d = data[codebook[ctx['name_label']][var]]
+                d = np.asarray(d, dtype=int)
+                check = np.all((d >= np.min(ms)) & (d <= np.max(ms)))
+                if not check:
+                    raise ValueError(f"Some values in your data for variable {codebook[ctx['Variable']][var]} are outside of the range specified in the codebook.")
     return data
 
 

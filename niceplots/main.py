@@ -171,7 +171,7 @@ def main():
 
     if not ARGS.serial:
         LOGGER.info("Running in parallel mode")
-        LOGGER.warn("DEPRECATED")
+        LOGGER.warning("DEPRECATED")
         with Pool() as p:
             p.map(
                 partial(exec_func, global_plotting_datas, ctx=ctx),

@@ -4,7 +4,7 @@ import os
 
 from setuptools import find_packages, setup
 
-requirements = ["pyyaml", "pandas", "argparse", "pathlib", "numpy",
+requirements = ["pyyaml", "pandas", "argparse", "numpy",
                 "matplotlib", "PyHyphen", "tqdm", "tkPDFViewer"]
 
 with open("README.rst") as readme_file:
@@ -34,7 +34,7 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python :: 3.7",
     ],
-    python_requires=[">=3.7"],
+    python_requires=">=3.7",
     entry_points={
         'console_scripts': [
             "nice-plots = niceplots.main:main"

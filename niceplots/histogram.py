@@ -43,11 +43,11 @@ def get_histogram_type(n_questions, plotting_data, xx):
                         "with 2 possible answers each"
                         "-> Interpreting as binary and combining "
                         "into a single histogram.")
-            LOGGER.warn(
+            LOGGER.warning(
                 "CAUTION: I assume that code = 1 means Yes and code"
                 " = 2 means No!")
         else:
-            LOGGER.warn(f"Cannot convert question block {xx} into "
+            LOGGER.warning(f"Cannot convert question block {xx} into "
                         "a histogram. Skipping...")
     return single_histogram, multi_histogram
 
