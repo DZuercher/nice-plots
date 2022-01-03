@@ -4,8 +4,8 @@ import numpy as np
 from niceplots import utils
 from niceplots import parser
 from tqdm import tqdm
-
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def parse_mapping(data, mapping, var_name, ctx, nbins):
@@ -110,9 +110,8 @@ def process_data(data, codebook, ctx):
     block_id_label = ctx['block_id_label']
     # check if exists
     if block_id_label not in codebook:
-        raise Exception(
-            f"The codebook does not contain a column named {block_id_label} "
-            "-> Cannot group variables into blocks.")
+        return f"The codebook does not contain a column named {block_id_label} " \
+               "-> Cannot group variables into blocks."
     # define the variable blocks
     block_ids = np.asarray(codebook[block_id_label], dtype=int)
     LOGGER.info(
@@ -140,9 +139,8 @@ def process_data(data, codebook, ctx):
 
                 # get the necessary data from the data table
                 if variable_name not in data:
-                    raise ValueError(
-                        f"Did not find the column {variable_name} "
-                        "in your data")
+                    return f"Did not find the column {variable_name} " \
+                           "in your data"
 
                 d = np.asarray(data[variable_name][cat])
 

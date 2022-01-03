@@ -1,13 +1,14 @@
 # Authors: Dominik Zuercher, Valeria Glauser
-
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import math
 import numpy as np
 from niceplots import utils
 import matplotlib as mpl
-
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def plot_nice_bar(ax, plotting_data, positions, ctx, height):

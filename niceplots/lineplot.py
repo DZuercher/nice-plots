@@ -1,10 +1,12 @@
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import math
 import numpy as np
 from niceplots import utils
-
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def add_questions(p_d, n_questions, positions, ax, ctx, dist):

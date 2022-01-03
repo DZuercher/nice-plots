@@ -2,8 +2,13 @@
 
 from niceplots import niceplot_API
 from niceplots import gui
+from niceplots import main as climain
+
 
 def main():
+    LOGGER = climain.init_logger('niceplots')
+    climain.set_logger_level(LOGGER, 4)
+
     GUI = gui.GUI()
 
     np_instance = niceplot_API.niceplots_handles()

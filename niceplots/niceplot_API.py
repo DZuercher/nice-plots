@@ -15,8 +15,8 @@ from niceplots import barplot
 from niceplots import lineplot
 from niceplots import histogram
 
-global LOGGER
-LOGGER = utils.init_logger(__file__)
+import logging
+LOGGER = logging.getLogger(__name__)
 
 class niceplots_handles:
     """ Holds nice plots objects """
@@ -84,8 +84,13 @@ class niceplots_handles:
         os.remove(self.ctx['codebook_path'])
 
         # re-initialize
-        self.codebook = parser.load_codebook(
+        code_out = parser.load_codebook(
             self.ctx, self.default_codebook_path.get())
+        if isinstance(code_out, str):
+            status_label.config(text=code_out)
+            return
+        else:
+            self.codebook = code_out
 
         # reset string variables
         n_entries = self.codebook.shape[0]
@@ -135,9 +140,14 @@ class niceplots_handles:
         os.remove(self.ctx['config_file'])
 
         # re-initialize
-        self.ctx = parser.load_config(self.default_config_path.get(),
+        ctx_out = parser.load_config(self.default_config_path.get(),
                                       self.output_dir.get(),
                                       os.path.basename(self.output_dir.get()))
+        if isinstance(ctx_out, str):
+            status_label.config(text=ctx_out)
+            return
+        else:
+            self.ctx = ctx_out
 
         # reset string variables
         for key in self.config_variables.keys():
@@ -160,22 +170,47 @@ class niceplots_handles:
         LOGGER.info(f"Set data file path -> {self.data_path.get()}")
 
         # parsing
-        self.ctx = parser.load_config(self.default_config_path.get(),
+        ctx_out = parser.load_config(self.default_config_path.get(),
                                       self.output_dir.get(),
                                       os.path.basename(self.output_dir.get()))
+        if isinstance(ctx_out, str):
+            status_label.config(text=ctx_out)
+            return
+        else:
+            self.ctx = ctx_out
 
         LOGGER.info("Loading codebook...")
-        self.codebook = parser.load_codebook(
+        code_out = parser.load_codebook(
             self.ctx, self.default_codebook_path.get())
+        if isinstance(code_out, str):
+            status_label.config(text=code_out)
+            return
+        else:
+            self.codebook = code_out
 
         LOGGER.info("Loading data...")
-        self.data = parser.load_data(
+        data = parser.load_data(
             self.ctx, self.data_path.get(), self.codebook)
+        if isinstance(data, str):
+            status_label.config(text=data)
+            return
+        else:
+            self.data = data
 
-        parser.check_config(self.ctx, self.codebook, self.data)
+        status = parser.check_config(self.ctx, self.codebook, self.data)
+        if len(status) > 0:
+            status_label.config(text=status)
+            return
+
         LOGGER.info("Processing input data...")
-        self.global_plotting_data = process.process_data(
+        data_out = process.process_data(
             self.data, self.codebook, self.ctx)
+        if isinstance(data_out, str):
+            status_label.config(text=data_out)
+            return
+        else:
+            self.global_plotting_data = data_out
+
         status_label.config(text="")
 
     def run(self, status_label):
