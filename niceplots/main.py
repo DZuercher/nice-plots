@@ -19,34 +19,33 @@ import logging
 # from functools import partial
 
 class CustomFormatter(logging.Formatter):
+    RED = '\033[91m'
+    VIOLET = '\033[95m'
+    YELLOW = '\033[93m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    ENDC = '\033[0m'
 
-    grey = "\x1b[38;20m"
-    yellow = "\x1b[33;20m"
-    red = "\x1b[31;20m"
-    bold_red = "\x1b[31;1m"
-    reset = "\x1b[0m"
-    format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
+    format = "%(asctime)s - %(filename)12s:%(lineno)3d - %(levelname)7s - %(message)s"
 
     FORMATS = {
-        logging.DEBUG: grey + format + reset,
-        logging.INFO: grey + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
+        logging.DEBUG: VIOLET + format + ENDC,
+        logging.INFO: format,
+        logging.WARNING: BOLD + format + ENDC,
+        logging.ERROR: BOLD + RED + format + ENDC,
+        logging.CRITICAL: BOLD + RED + format + ENDC
     }
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
+        new = formatter.format(record)
+        return new
 
 def init_logger(name): 
     """
     Initializes a logger instance for a file.
-
-    :param filepath: The path of the file for which the logging is done.
-    :param logging_level: The logger level
-                          (critical, error, warning, info or debug)
+    :param name: The name of the file for which the logging is done.
     :return: Logger instance
     """
     logger = logging.getLogger(name)

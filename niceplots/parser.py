@@ -133,10 +133,10 @@ def load_config(config_path, output_directory, output_name):
     ctx['config_file'] = output_config
     ctx['output_directory'] = output_directory
 
-    LOGGER.debug("++++++++++++++++ CONFIG ++++++++++++++++")
+    LOGGER.debug( '+' * 50 + " CONFIG " + '+' * 50)
     for item in ctx.items():
         LOGGER.debug(f"{item[0]} : {item[1]}")
-    LOGGER.debug("++++++++++++++++++++++++++++++++")
+    LOGGER.debug( '+' * 108)
 
     return ctx
 
@@ -331,6 +331,10 @@ def load_codebook(ctx, codebook_path):
         LOGGER.debug(
             f"Copied global codebook to local: {codebook_path} -> {output_codebook_path}")
     LOGGER.info(f"Using codebook in: {output_codebook_path}")
+
+    LOGGER.debug( '+' * 50 + " CODEBOOK " + '+' * 50)
+    LOGGER.debug('\n' + str(codebook.head()))
+    LOGGER.debug( '+' * 110)
     return codebook
 
 
@@ -351,4 +355,8 @@ def load_data(ctx, data_path, codebook):
 
     # check validity and replace non-numerical entries
     data = check_data(data, ctx, codebook)
+
+    LOGGER.debug( '+' * 50 + " DATA " + '+' * 50)
+    LOGGER.debug('\n' + str(data.head()))
+    LOGGER.debug( '+' * 106)
     return data
