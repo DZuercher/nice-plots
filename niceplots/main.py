@@ -190,7 +190,6 @@ def main(plot_type, data_path, config_path, codebook_path, output_name,
     LOGGER.info(f"Using output directory: {output_directory}")
 
     # Load config file
-    LOGGER.info("Loading config file...")
     ctx = parser.load_config(config_path,
                              output_directory,
                              output_name)
@@ -198,16 +197,16 @@ def main(plot_type, data_path, config_path, codebook_path, output_name,
         LOGGER.error(ctx)
         return
     ctx['format'] = format
+    LOGGER.info("Loaded config file")
 
     # Load codebook
-    LOGGER.info("Loading codebook...")
     codebook = parser.load_codebook(ctx, codebook_path)
     if isinstance(codebook, str):
         LOGGER.error(codebook)
         return
+    LOGGER.info("Loaded codebook")
 
     # Load data
-    LOGGER.info("Loading data...")
     datas = {}
     for path, label in zip(data_path, time_labels):
         data = parser.load_data(ctx, path, codebook)
@@ -215,6 +214,7 @@ def main(plot_type, data_path, config_path, codebook_path, output_name,
             LOGGER.error(data)
             return
         datas[label] = data
+    LOGGER.info("Loaded data")
 
     # check the config file
     for data in datas.values():
@@ -223,13 +223,13 @@ def main(plot_type, data_path, config_path, codebook_path, output_name,
             LOGGER.error(status)
             return
 
-    LOGGER.info("Processing input data...")
     global_plotting_datas = {}
     for label, data in datas.items():
         global_plotting_datas[label] = process.process_data(data, codebook, ctx)
         if isinstance(global_plotting_datas[label], str):
             LOGGER.error(global_plotting_datas[label])
             return
+    LOGGER.info("Preprocessed data")
 
     # number of question blocks -> number of plots
     n_blocks = len(global_plotting_datas[list(global_plotting_datas.keys())[0]])
@@ -237,7 +237,7 @@ def main(plot_type, data_path, config_path, codebook_path, output_name,
     if plot_type != 'timeline':
         global_plotting_datas = global_plotting_datas[list(global_plotting_datas.keys())[0]]
 
-    LOGGER.info("Producing plots...")
+    LOGGER.info("Producing plots... \n")
     if plot_type == 'bars':
         exec_func = getattr(barplot, 'plot_barplots')
     elif plot_type == 'lines':

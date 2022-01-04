@@ -178,8 +178,7 @@ def check_codebook(codebook, ctx):
                     for ma in mappings_:
                         m = {}
                         code = int(ma.split('=')[0])
-                        # CHECK THIS!
-                        if code == 0:
+                        if (code == ctx['no_answer_code']):
                             continue
                         m['code'] = code
                         label = ma.split('=')[1]
