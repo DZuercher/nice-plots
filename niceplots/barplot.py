@@ -64,6 +64,7 @@ def plot_nice_bar(ax, plotting_data, positions, ctx, height):
 
         bool_idx = np.append(
             widths, [0] * (all_category_colors.shape[0] - len(widths)))
+
         category_colors = all_category_colors[bool_idx > 0, :]
 
         offsets = offsets[widths > 0]
