@@ -256,10 +256,10 @@ def check_data(data, ctx, codebook):
             for var in variable_indices:
                 d = data[codebook[ctx['name_label']][var]]
                 d = np.asarray(d, dtype=int)
-                check = np.all((d >= np.min(ms)) & (d <= np.max(ms)))
+                check = np.all((d >= np.min(ms)) & (d <= np.max(ms)) | np.isclose(d, codebook.at[var, ctx['missing_label']]))
                 if not check:
                     raise ValueError(
-                        f"Some values in your data for variable {codebook[ctx['Variable']][var]} "
+                        f"Some values in your data for variable {codebook[ctx['name_label']][var]} "
                         f"are outside of the range specified in the codebook.")
     return data
 
@@ -286,14 +286,17 @@ def load_codebook(ctx, codebook_path):
         initialize = False
     else:
         LOGGER.debug(f"Did not find a local codebook in {output_codebook_path}. Creating from global one.")
-        try:
-            codebook = pd.read_csv(codebook_path, keep_default_na=False,
-                                    sep=ctx['delimiter'], dtype='object')
-        except Exception as e:
-            status = f"Could not load codebook file from path {codebook_path}. Error: {e}"
-            return status
+        if isinstance(codebook_path, str):
+            try:
+                codebook = pd.read_csv(codebook_path, keep_default_na=False,
+                                        sep=ctx['delimiter'], dtype='object')
+            except Exception as e:
+                status = f"Could not load codebook file from path {codebook_path}. Error: {e}"
+                return status
+            LOGGER.debug(f"Loaded global codebook from: {codebook_path}")
+        else:
+            codebook = codebook_path
         initialize = True
-        LOGGER.debug(f"Loaded global codebook from: {codebook_path}")
 
     # add some additional columns to the codebook
     additional_codebook_entries = ['color_scheme', 'invert', 'nbins', 'unit',
