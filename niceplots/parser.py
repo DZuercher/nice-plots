@@ -97,19 +97,26 @@ def load_config(config_path, output_directory, output_name):
 
     # load default config
     default_config_path = config_path
-    with open(default_config_path, 'r') as f:
-        try:
-            ctx = yaml.load(f, yaml.FullLoader)
-        except Exception as e:
-            status = f"Could not load default config file from path {default_config_path}. Error: {e}"
-            return status
-    LOGGER.debug('Loaded default configuration file from {}'.format(default_config_path))
+    if isinstance(default_config_path, str):
+        with open(default_config_path, 'r') as f:
+            try:
+                ctx = yaml.load(f, yaml.FullLoader)
+            except Exception as e:
+                status = f"Could not load default config file from path {default_config_path}. Error: {e}"
+                return status
+        LOGGER.debug('Loaded default configuration file from {}'.format(default_config_path))
+    else:
+        ctx = default_config_path
 
     # check if config in output directory already exists, create otherwise
     output_config = f'{output_directory}/config_{output_name}.yml'
     if not os.path.exists(output_config):
-        shutil.copyfile(config_path, output_config)
-        LOGGER.info(f"Copied default config file to output directory: {config_path} -> {output_config}")
+        if isinstance(default_config_path, str):
+            shutil.copyfile(config_path, output_config)
+            LOGGER.info(f"Copied default config file to output directory: {config_path} -> {output_config}")
+        else:
+            with open(output_config, 'w') as f:
+                documents = yaml.dump(config_path, f)
 
     # load output config file
     with open(output_config, 'r') as f:
@@ -305,9 +312,10 @@ def load_codebook(ctx, codebook_path):
     if initialize:
         # add the plotting options columns to the codebook
         for key in additional_codebook_entries:
-            codebook[key + " - nice-plots"] = ctx[key]
-            LOGGER.debug(f"Added additional column {key} - nice-plots to "
-                        f"codebook. Initialized with value {ctx[key]}.")
+            if f"{key} - nice-plots" not in codebook:
+                codebook[key + " - nice-plots"] = ctx[key]
+                LOGGER.debug(f"Added additional column {key} - nice-plots to "
+                            f"codebook. Initialized with value {ctx[key]}.")
 
     # add codebook realted variables to config instance
     ctx['codebook_path'] = output_codebook_path

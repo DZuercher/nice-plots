@@ -145,7 +145,7 @@ def main_cli():
 
 
 def main(plot_type, data_path, config_path, codebook_path, output_name,
-         clear_cache=False, format='pdf', time_labels=[""], verbosity=3):
+         clear_cache=False, format='pdf', time_labels=[""], verbosity=3, output_folder=os.getcwd()):
     LOGGER = init_logger('niceplots')
     set_logger_level(LOGGER, verbosity)
 
@@ -185,7 +185,7 @@ def main(plot_type, data_path, config_path, codebook_path, output_name,
     LOGGER.info(f"Using cache in: {cache_directory}")
 
     # create output directory
-    output_directory = os.getcwd() + "/{}".format(output_name)
+    output_directory = output_folder + "/{}".format(output_name)
     pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
     LOGGER.info(f"Using output directory: {output_directory}")
 
