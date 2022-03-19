@@ -179,6 +179,10 @@ def process_data(data, codebook, ctx):
                     d = d[np.logical_not(
                         np.isclose(d, ctx['no_answer_code']))]
 
+                # ignore if no data left
+                if len(d) == 0:
+                    continue
+
                 # add to plotting data for this category
                 p_d.append({'meta': meta, 'data': d})
 

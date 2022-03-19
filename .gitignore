@@ -53,3 +53,5 @@ docs/_build
 # pytest
 .pytest_cache/
 .idea/
+
+*.vscode
