@@ -229,7 +229,7 @@ def plot_histograms(xx, global_plotting_data, ctx):
 
     # initialize canvas
     figsize = (ctx['plot_width'], ctx['plot_width'])
-    fig, ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize, tight_layout=False)
 
     # draw histogram
     n, bin_edges, _ = ax.hist(
@@ -264,5 +264,5 @@ def plot_histograms(xx, global_plotting_data, ctx):
     # save plot
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.{ctx['format']}",
-        bbox_inches='tight')
+        bbox_inches='tight', transparent=False)
     plt.close()

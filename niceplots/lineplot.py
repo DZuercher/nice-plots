@@ -204,7 +204,7 @@ def plot_lineplots(xx, global_plotting_data, ctx):
 
     # initialize canvas
     figsize = (ctx['plot_width'], y_size_in_inches)
-    fig, ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize, tight_layout=False)
 
     # get plot height and distances in data coordinates
     height = utils.inches_to_axispixels_size(ctx['line_plot_height'], fig, ax, dim='y') # height of a single bar
@@ -239,5 +239,5 @@ def plot_lineplots(xx, global_plotting_data, ctx):
     # save plot
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.{ctx['format']}",
-        bbox_inches='tight')
+        bbox_inches='tight', transparent=False)
     plt.close()

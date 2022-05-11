@@ -228,7 +228,7 @@ def plot_barplots(xx, global_plotting_data, ctx):
     plotting_data = global_plotting_data[xx]
 
     # init figure
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(tight_layout=False)
 
     # get number of questions and filters
     n_categories = len(plotting_data.keys())
@@ -241,7 +241,7 @@ def plot_barplots(xx, global_plotting_data, ctx):
 
     # initialize canvas
     figsize = (ctx['plot_width'], y_size_in_inches)
-    fig, ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize, tight_layout=False)
 
 
     # get quantities in pixels
@@ -304,5 +304,5 @@ def plot_barplots(xx, global_plotting_data, ctx):
     # save plot
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.{ctx['format']}",
-        bbox_inches='tight')
+        bbox_inches='tight', transparent=False)
     plt.close()
