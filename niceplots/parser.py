@@ -1,5 +1,6 @@
 # Authors: Dominik Zuercher, Valeria Glauser
 
+from tokenize import group
 import yaml
 import os
 import pandas as pd
@@ -348,12 +349,14 @@ def load_codebook(ctx, codebook_path):
     return codebook
 
 
-def load_data(ctx, data_path, codebook):
+def load_data(ctx, data_path, codebook, split_columns=None):
     """
     Load and preprocess the data table from data_path.
     :param ctx: Configuration instance.
     :param data_path: Path to data file.
     :param codebook: The codebook (pandas data frame)
+    :param split_columns: Can provide list of columns used to split the data
+    into multiple data sets (used for timeboxes).
     :return : Data table (pandas data frame)
     """
     try:
@@ -369,4 +372,22 @@ def load_data(ctx, data_path, codebook):
     LOGGER.debug( '+' * 50 + " DATA " + '+' * 50)
     LOGGER.debug('\n' + str(data.head()))
     LOGGER.debug( '+' * 106)
-    return data
+
+    if split_columns is not None:
+        data['split_label'] = ''
+        LOGGER.debug(f"Splitting data set based on columns {split_columns}")
+        for col in split_columns:
+            if col not in data.columns:
+                raise Exception(f"Did not find column {col} in data. Cannot split data.")
+            data['split_label'] = data['split_label'] + " " + data[col].astype(str)
+            data.drop(columns=col, inplace=True)
+        data['split_label'] = data['split_label'].str[1:]
+        grouped_data = data.groupby('split_label')
+        result = {}
+        for name, d in grouped_data.groups:
+            result[name] = d
+        LOGGER.info(f"Splitted total data into {len(result.keys())} groups.")
+        result = dict(sorted(result.items()))
+        return result
+    else:
+        return data

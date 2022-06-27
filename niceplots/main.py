@@ -6,6 +6,7 @@ from niceplots import barplot
 from niceplots import lineplot
 from niceplots import histogram
 from niceplots import timeline
+from niceplots import timebox
 from niceplots import utils
 import os
 from tqdm import tqdm
@@ -119,9 +120,11 @@ def main_cli():
                           "specified by the config_path and codebook_path arguments.")
     cli_args.add_argument('--plot_type', type=str, action='store',
                           default='bars', choices=['bars', 'lines',
-                                                   'histograms', 'timeline'],
+                                                   'histograms', 'timeline', 'timeboxes'],
                           help='Type of plots to produce. '
                           'If plot_type=timeline expects a list of data_paths and also time_labels')
+    cli_args.add_argument('--timebox_columns', type=str, nargs='*', default=[''], action='store',
+                          help='Data columns used to split data set into subsets for timeboxes.')
     cli_args.add_argument('--format', type=str, action='store',
                           default='pdf', choices=['pdf', 'svg', 'png'],
                           help='Format of the output plots.')
@@ -141,11 +144,13 @@ def main_cli():
          clear_cache=ARGS.clear_cache,
          format=ARGS.format,
          time_labels=ARGS.time_labels,
+         timebox_columns=ARGS.timebox_columns,
          verbosity=ARGS.verbosity)
 
 
 def main(plot_type, data_path, config_path, codebook_path, output_name,
-         clear_cache=False, format='pdf', time_labels=[""], verbosity=3, output_folder=os.getcwd()):
+         clear_cache=False, format='pdf', time_labels=[""], timebox_columns=[""],
+         verbosity=3, output_folder=os.getcwd()):
     LOGGER = init_logger('niceplots')
     set_logger_level(LOGGER, verbosity)
 
@@ -207,13 +212,16 @@ def main(plot_type, data_path, config_path, codebook_path, output_name,
     LOGGER.info("Loaded codebook")
 
     # Load data
-    datas = {}
-    for path, label in zip(data_path, time_labels):
-        data = parser.load_data(ctx, path, codebook)
-        if isinstance(data, str):
-            LOGGER.error(data)
-            return
-        datas[label] = data
+    if plot_type == 'timeboxes':
+        datas = parser.load_data(ctx, path, codebook, split_columns=timebox_columns)
+    else:
+        datas = {}
+        for path, label in zip(data_path, time_labels):
+            data = parser.load_data(ctx, path, codebook)
+            if isinstance(data, str):
+                LOGGER.error(data)
+                return
+            datas[label] = data
     LOGGER.info("Loaded data")
 
     # check the config file
@@ -246,6 +254,8 @@ def main(plot_type, data_path, config_path, codebook_path, output_name,
         exec_func = getattr(histogram, 'plot_histograms')
     elif plot_type == 'timeline':
         exec_func = getattr(timeline, 'plot_timelines')
+    elif plot_type == 'timeboxes':
+        exec_func = getattr(timebox, 'plot_timeboxes')
     else:
         raise Exception(f"Plot type {plot_type} does not exist.")
 

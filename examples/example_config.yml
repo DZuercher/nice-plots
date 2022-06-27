@@ -148,6 +148,15 @@ timeline_plot_dist: 0.6
 
 timeline_colors: ['blue', 'red']
 
+# TIMEBOXES 
+############################################################
+
+timeboxes_plot_height: 2.0
+
+timeboxes_plot_dist: 0.6 
+
+timeboxes_colors: ['blue', 'red']
+
 ############################################################
 # Only changes those attributes if it is really needed.
 ############################################################
