@@ -237,14 +237,14 @@ def check_data(data, ctx, codebook):
                    f"does not exist in your data. Aborting..."
 
     # set all non numerical entries in data to NaN
-    string_filter = data.applymap(isnumber)
-    num_strings = np.asarray(string_filter).size \
-        - np.sum(np.asarray(string_filter))
-    if num_strings > 0:
-        LOGGER.warning(f"Found {num_strings} non-numerical values in "
-                    "your data. Setting them to NaN.")
-    data = data[string_filter]
-    data = data.applymap(float)
+    # string_filter = data.applymap(isnumber)
+    # num_strings = np.asarray(string_filter).size \
+    #     - np.sum(np.asarray(string_filter))
+    # if num_strings > 0:
+    #     LOGGER.warning(f"Found {num_strings} non-numerical values in "
+    #                 "your data. Setting them to NaN.")
+    # data = data[string_filter]
+    # data = data.applymap(float)
 
     # check that data is in the range required by mappings
     block_id_label = ctx['block_id_label']

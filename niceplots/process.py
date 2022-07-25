@@ -105,7 +105,7 @@ def parse_filter_functions(data, codebook, ctx):
             # replace all variable names (cannot fail due to check in config readin step)
             f = parser.get_filter_from_string(f, codebook[ctx['name_label']])
             # evaluate filter expression -> boolean filter
-            idx = eval(f)
+            idx = eval(f)            
             fs.append(idx)
         return (f_names, fs)
 

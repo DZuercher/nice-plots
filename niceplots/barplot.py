@@ -80,6 +80,8 @@ def plot_nice_bar(ax, plotting_data, positions, ctx, height):
         # add number indicating number of answers
         xcenters = starts + widths / 2.
         for ii, c in enumerate(results[i][results[i] > 0]):
+            if widths[ii] < 0.05:
+                continue
             ax.text(xcenters[ii], positions[i], str(int(c)), ha='center',
                     va='center',
                     color=text_color, fontsize=ctx['fontsize'])
