@@ -53,6 +53,9 @@ no_answer_code : 99
 # Example:
 filters : {'Group 1' : 'VAR02 == 1', 'Others' : '(VAR02 == 2) | (VAR02 == 4)'}
 
+# output format
+format: pdf
+
 ############################################################
 # You might want to change some of the following attributes.
 ############################################################
@@ -135,6 +138,15 @@ hist_stats_dist : 0.5 # in inches
 
 # The colors for the bars in the histograms. One per filter category
 histogram_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
+
+# TIMELINES 
+############################################################
+
+timeline_plot_height: 2.0
+
+timeline_plot_dist: 0.6 
+
+timeline_colors: ['blue', 'red']
 
 ############################################################
 # Only changes those attributes if it is really needed.

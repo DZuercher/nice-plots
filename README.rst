@@ -12,19 +12,19 @@ barplot:
 --------
 
 .. image:: examples/barplots/barplots_2.png
-    :width: 300px
+    :width: 500px
 
 lineplot:
 ---------
 
 .. image:: examples/lineplots/lineplots_4.png
-    :width: 300px
+    :width: 500px
 
 histogram:
 ----------
 
 .. image:: examples/histograms/histograms_0.png
-    :width: 300px
+    :width: 500px
 
 
 Installation
@@ -74,6 +74,37 @@ For a quick test of nice-plots navigate over to the examples directory and
 run:
 
     $ nice-plots --config_path=example_config.yml --codebook_path=example_codebook.csv --data_path=example_data.csv --output_name=output1 --plot_type=bars
+
+
+Graphical user interface:
+=========================
+
+nice-plots also features a small GUI for those that do not like the command line so much. The GUI is only supported for Linux systems at the moment.
+
+
+General tab:
+--------
+
+.. image:: examples/gui_images/general.png
+    :width: 500px
+
+Configuration tab:
+--------
+
+.. image:: examples/gui_images/config.png
+    :width: 500px
+
+Codebook tab:
+--------
+
+.. image:: examples/gui_images/codebook.png
+    :width: 500px
+
+Preview tab:
+--------
+
+.. image:: examples/gui_images/preview.png
+    :width: 500px
 
 Credits
 =======

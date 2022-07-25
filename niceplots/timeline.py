@@ -26,7 +26,7 @@ def plot_timelines(xx, global_plotting_datas, ctx):
 
     # initialize canvas
     figsize = (ctx['plot_width'], y_size_in_inches)
-    fig, ax = plt.subplots(ncols=1, nrows=n_questions, figsize=figsize)
+    fig, ax = plt.subplots(ncols=1, nrows=n_questions, figsize=figsize, tight_layout=False)
     if n_questions == 1:
         ax = [ax]
     plt.subplots_adjust(hspace=ctx['timeline_plot_dist'])
@@ -62,7 +62,7 @@ def plot_timelines(xx, global_plotting_datas, ctx):
     # save plot
     fig.savefig(
         f"{ctx['output_directory']}/{ctx['output_name']}_{xx}.{ctx['format']}",
-        bbox_inches='tight')
+        bbox_inches='tight', transparent=False)
     plt.close()
 
 
