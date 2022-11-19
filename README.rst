@@ -6,7 +6,7 @@ Introduction
 ============
 
 nice-plots allows to easily and automatically visualize survey data.
-Currently there are 3 different types of visualization:
+Currently there are 4 different types of visualization:
 
 barplot:
 --------
