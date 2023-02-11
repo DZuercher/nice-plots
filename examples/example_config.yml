@@ -142,7 +142,7 @@ histogram_colors: ['C0', 'C1', 'C2', 'C3', 'C4']
 # TIMELINES 
 ############################################################
 
-timeline_plot_height: 2.0
+timeline_plot_height: 3.0
 
 timeline_plot_dist: 0.6 
 

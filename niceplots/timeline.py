@@ -13,8 +13,6 @@ def plot_timelines(xx, global_plotting_datas, ctx):
     for label, data in global_plotting_datas.items():
         plotting_datas[label] = data[xx]
     
-    # print(plotting_datas['HS'])
-
     first_key = list(plotting_datas.keys())[0]
 
     n_questions = len(plotting_datas[first_key][
@@ -39,9 +37,13 @@ def plot_timelines(xx, global_plotting_datas, ctx):
             means = np.asarray(means)
             stds = [np.std(plotting_datas[key][group][ii]['data']) for key in list(plotting_datas.keys())]
             stds = np.asarray(stds)
-            ax[ii].plot(np.arange(len(means)), means, label=group, color=ctx['timeline_colors'][g])
-            ax[ii].fill_between(np.arange(len(means)), means - stds, means + stds, alpha = 0.2, color=ctx['timeline_colors'][g])
-        
+            #ax[ii].plot(np.arange(len(means)), means, label=group, color=ctx['timeline_colors'][g])
+            #ax[ii].fill_between(np.arange(len(means)), means - stds, means + stds, alpha = 0.2, color=ctx['timeline_colors'][g])
+            #ax[ii].boxplot
+            markers, caps, bars = ax[ii].errorbar(np.arange(len(means)), means - stds, yerr=stds, color=ctx['timeline_colors'][g], fmt="o", capsize=7, capthick=2, elinewidth=3, linestyle="", markersize=8)
+            [bar.set_alpha(0.3) for bar in bars]
+            [cap.set_alpha(0.3) for cap in caps]
+
         # axes styling
         ax[ii].set_xticks(np.arange(len(means)))
         ax[ii].set_xticklabels(list(plotting_datas.keys()), fontsize=ctx['fontsize'])
@@ -51,13 +53,16 @@ def plot_timelines(xx, global_plotting_datas, ctx):
         ax[ii].set_yticklabels(yticks, fontsize=ctx['fontsize'])
         span = np.max(yticks) - np.min(yticks)
         ax[ii].set_ylim([np.min(yticks) - 0.25 * span, np.max(yticks) + 0.25 * span])
-        ax[ii].set_xlim([0, len(means) - 1])
+        #ax[ii].set_xlim([0, len(means) - 1])
+        #ax[ii].set_xlim([0, len(means) - 1])
+
 
         ax[ii].set_title(plotting_datas[first_key][group][ii]['meta']['question'], fontsize=ctx['fontsize'])
 
         if ii == 0:
             title_height = utils.get_render_size(plotting_datas[first_key][group][ii]['meta']['question'], ctx, x_size=False)
-            ax[ii].legend(ncol=2, bbox_to_anchor=(0, 1 + title_height + 0.2), loc='lower left', frameon=True, fontsize=ctx['fontsize_stats'])
+            if len(filter_groups) > 1:
+                ax[ii].legend(ncol=2, bbox_to_anchor=(0, 1 + title_height + 0.2), loc='lower left', frameon=True, fontsize=ctx['fontsize_stats'])
 
     # save plot
     fig.savefig(
