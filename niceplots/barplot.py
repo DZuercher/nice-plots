@@ -54,8 +54,10 @@ def plot_nice_bar(ax, plotting_data, positions, ctx, height):
             0.15, 0.85, n_categories))
     all_category_colors = np.asarray(all_category_colors)
     if p_d['meta']['invert'] == 'True':
-        all_category_colors = np.flip(all_category_colors)
+        all_category_colors = np.flip(all_category_colors, axis=0)
 
+    if hist.size != all_category_colors.shape[0]:
+        raise Exception("Number of colors is unequal to number of bins! Did you indicate the wrong 'no_answer' code.")
     # loop over questions in block and produce one bar each
     for i in range(len(results)):
         # bar chart
@@ -95,6 +97,8 @@ def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars, dist,
     Adds a legend at the top describing what the colors mean.
     """
     p_d = plotting_data[0]['meta']
+    if p_d['invert'] == 'True':
+        category_colors = np.flip(category_colors, axis=0)
 
     if 'bins' in p_d['mapping']:
         # no labels for the colors given.
@@ -125,6 +129,8 @@ def add_legend(plotting_data, category_colors, ctx, fig, ax, num_bars, dist,
         c_m = getattr(mpl.cm, p_d['color_scheme'])
         c_m = mpl.colors.ListedColormap(c_m(np.linspace(
             0.15, 0.85, len(p_d['mapping']))))
+        if p_d['invert'] == 'True':
+            c_m = c_m.reversed()
         s_m = mpl.cm.ScalarMappable(cmap=c_m, norm=norm)
         s_m.set_array([])
         cbar = plt.colorbar(s_m, cax=cax, orientation='horizontal',
