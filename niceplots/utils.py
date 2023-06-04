@@ -122,6 +122,8 @@ def wrap_text(text, width=60):
         cache = np.load(cache_file)
     else:
         cache = np.asarray([['', '']], dtype=('str', 'str'))
+    # PyHyphen cannot handle dashes
+    text = str(text).replace("-", '')
     if text in cache[:, 0]:
         return cache[cache[:, 0] == text, 1][0]
     else:
