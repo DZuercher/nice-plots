@@ -25,7 +25,7 @@ include = ["niceplots"]
 namespaces = false
 
 [project.scripts]
-nice-plots = "niceplots.main:main_cli"
+nice-plots = "niceplots.main:cli"
 
 [tool.setuptools.package-data]
 

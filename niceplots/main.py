@@ -1,270 +1,212 @@
 # Authors: Dominik Zuercher, Valeria Glauser
 
-from niceplots import parser
-from niceplots import process
-from niceplots import barplot
-from niceplots import lineplot
-from niceplots import histogram
-from niceplots import timeline
-from niceplots import utils
 import os
-from tqdm import tqdm
-import sys
 import pathlib
-import argparse
-import platform
-import subprocess
-import logging
-# from multiprocessing import Pool
-# from functools import partial
+from pathlib import Path
+from typing import Tuple
 
-class CustomFormatter(logging.Formatter):
-    RED = '\033[91m'
-    VIOLET = '\033[95m'
-    YELLOW = '\033[93m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    ENDC = '\033[0m'
+import click
+from tqdm import tqdm
 
-    format = "%(asctime)s - %(filename)12s:%(lineno)3d - %(levelname)7s - %(message)s"
-
-    FORMATS = {
-        logging.DEBUG: VIOLET + format + ENDC,
-        logging.INFO: format,
-        logging.WARNING: BOLD + format + ENDC,
-        logging.ERROR: BOLD + RED + format + ENDC,
-        logging.CRITICAL: BOLD + RED + format + ENDC
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        new = formatter.format(record)
-        return new
-
-def init_logger(name): 
-    """
-    Initializes a logger instance for a file.
-    :param name: The name of the file for which the logging is done.
-    :return: Logger instance
-    """
-    logger = logging.getLogger(name)
-
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setFormatter(CustomFormatter())
-    logger.addHandler(ch)
-    return logger
+from niceplots import barplot, histogram, lineplot, parser, process, timeline
+from niceplots.utils.nice_logger import init_logger, set_logger_level
 
 
-def set_logger_level(logger, level):
-    """
-    Sets the global logging level. Meassages with a logging level below will
-    not be logged.
+def main(
+    config: Path,
+    data: Tuple[Path],
+    book: Path,
+    name: str,
+    type: str,
+    format: str,
+    clear_cache: bool,
+    verbosity: str,
+    time_labels: Tuple[str],
+) -> None:
+    logger = init_logger("niceplots")
+    set_logger_level(logger, verbosity)
 
-    :param logger: A logger instance.
-    :param logging_level: The logger severity
-                          (critical, error, warning, info or debug)
-    """
+    logger.info("Starting nice-plots")
 
-    logging_levels = {0 : logging.CRITICAL,
-                      1 : logging.ERROR,
-                      2 : logging.WARNING,
-                      3 : logging.INFO,
-                      4 : logging.DEBUG}
-
-    logger.setLevel(logging_levels[level])
-
-def is_tool(name):
-    try:
-        devnull = open(os.devnull)
-        subprocess.Popen([name], stdout=devnull, stderr=devnull).communicate()
-    except OSError as e:
-        if e.errno == os.errno.ENOENT:
-            return False
-    return True
-
-
-def find_prog(prog):
-    if is_tool(prog):
-        cmd = "where" if platform.system() == "Windows" else "which"
-
-        p = subprocess.Popen([cmd, prog], stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, err = p.communicate()
-        return output.decode('utf-8').rstrip()
-
-
-def main_cli():
-    description = "Nice plots allows you to easily and automatically produce "\
-        "plots of your survey data."
-    cli_args = argparse.ArgumentParser(description=description, add_help=True)
-    cli_args.add_argument('--config_path', type=str, action='store',
-                          default='example_config.yml',
-                          help='Path to the configuration file. See examples/example_config.yml for example.')
-    cli_args.add_argument('--data_path', type=str, nargs='+', action='store',
-                          default=['example_data.csv'],
-                          help='Path to the data file, or list of such paths (in csv format)')
-    cli_args.add_argument('--time_labels', type=str, nargs='*', default=[''], action='store',
-                          help='Labels for the different data sets (only used if plot_type=timeline).')
-    cli_args.add_argument('--codebook_path', type=str, action='store',
-                          default='example_codebook.csv',
-                          help='Path to the codebook file (in csv format)')
-    cli_args.add_argument('--output_name', type=str, action='store',
-                          default='output1',
-                          help="Name prefix for output plots. Serves also as "
-                          "output directory name. NOTE: If there are configs "
-                          "and codebooks in the output directory they will be "
-                          "used instead of the global codebook and config files "
-                          "specified by the config_path and codebook_path arguments.")
-    cli_args.add_argument('--plot_type', type=str, action='store',
-                          default='bars', choices=['bars', 'lines',
-                                                   'histograms', 'timeline'],
-                          help='Type of plots to produce. '
-                          'If plot_type=timeline expects a list of data_paths and also time_labels')
-    cli_args.add_argument('--format', type=str, action='store',
-                          default='pdf', choices=['pdf', 'svg', 'png'],
-                          help='Format of the output plots.')
-    cli_args.add_argument('--clear_cache', action='store_true',
-                          default=False,
-                          help='Reset cache directory.')
-    cli_args.add_argument('--verbosity', type=int, action='store',
-                          default=3, choices=[1, 2, 3, 4],
-                          help='Verbosity level (1=error, 2=warning, 3=info, 4=debug). Defaults to 3.')
-
-    ARGS = cli_args.parse_args()
-    main(plot_type=ARGS.plot_type,
-         data_path=ARGS.data_path,
-         config_path=ARGS.config_path,
-         codebook_path=ARGS.codebook_path,
-         output_name=ARGS.output_name,
-         clear_cache=ARGS.clear_cache,
-         format=ARGS.format,
-         time_labels=ARGS.time_labels,
-         verbosity=ARGS.verbosity)
-
-
-def main(plot_type, data_path, config_path, codebook_path, output_name,
-         clear_cache=False, format='pdf', time_labels=[""], verbosity=3, output_folder=os.getcwd()):
-    LOGGER = init_logger('niceplots')
-    set_logger_level(LOGGER, verbosity)
-
-    LOGGER.info("Starting nice-plots")
-
-    if plot_type == 'timeline':
-        if not len(time_labels) == len(data_path):
+    if type == "timeline":
+        if not len(time_labels) == len(data):
             raise Exception(
                 "Can only make time series plot if same number "
-                "of labels and data sets provided.")
+                "of labels and data sets provided."
+            )
 
-    # parallel mode is deprecated
-    serial = True
-    if not serial:
-        # For OSX > High Sierra disable additional security features
-        # that prevent multithreading
-        if ('OBJC_DISABLE_INITIALIZE_FORK_SAFETY' not in os.environ):
-            os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
-        if (os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] != 'YES'):
-            os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
-        LOGGER.info("Resettting environment. This can hang indefinitely on "
-                    "some systems. If this is the case, switch off "
-                    "multiprocessing by passing --serial")
-        exe = find_prog("nice-plots")
-        os.execve(exe, sys.argv, os.environ)
-
-    LOGGER.info(f"Set configuration file path -> {config_path}")
-    LOGGER.info(f"Set data file path(s) -> {data_path}")
-    LOGGER.info(f"Set codebook file path -> {codebook_path}")
+    logger.info(f"Set configuration file path -> {config}")
+    logger.info(f"Set data file path(s) -> {config}")
+    logger.info(f"Set codebook file path -> {config}")
 
     # create cache directory
     cache_directory = os.path.expanduser("~/.cache/nice-plots")
-    if (os.path.exists(cache_directory)) & (clear_cache):
-        LOGGER.warning("RESETTING CACHE")
+    if (os.path.exists(cache_directory)) & clear_cache:
+        logger.warning("RESETTING CACHE")
         os.rmdir(cache_directory)
     pathlib.Path(cache_directory).mkdir(parents=True, exist_ok=True)
-    LOGGER.info(f"Using cache in: {cache_directory}")
+    logger.info(f"Using cache in: {cache_directory}")
 
     # create output directory
-    output_directory = output_folder + "/{}".format(output_name)
+    output_directory = os.getcwd() + f"/{name}"
     pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
-    LOGGER.info(f"Using output directory: {output_directory}")
+    logger.info(f"Using output directory: {output_directory}")
 
     # Load config file
-    ctx = parser.load_config(config_path,
-                             output_directory,
-                             output_name)
+    ctx = parser.load_config(config, output_directory, name)
     if isinstance(ctx, str):
-        LOGGER.error(ctx)
+        logger.error(ctx)
         return
-    ctx['format'] = format
-    LOGGER.info("Loaded config file")
+    ctx["format"] = format
+    logger.info("Loaded config file")
 
     # Load codebook
-    codebook = parser.load_codebook(ctx, codebook_path)
+    codebook = parser.load_codebook(ctx, book)
     if isinstance(codebook, str):
-        LOGGER.error(codebook)
+        logger.error(codebook)
         return
-    LOGGER.info("Loaded codebook")
+    logger.info("Loaded codebook")
 
     # Load data
     datas = {}
-    for path, label in zip(data_path, time_labels):
-        data = parser.load_data(ctx, path, codebook)
-        if isinstance(data, str):
-            LOGGER.error(data)
+    for path, label in zip(data, time_labels):
+        d = parser.load_data(ctx, path, codebook)
+        if isinstance(d, str):
+            logger.error(d)
             return
-        datas[label] = data
-    LOGGER.info("Loaded data")
+        datas[label] = d
+    logger.info("Loaded data")
 
     # check the config file
-    for data in datas.values():
-        status = parser.check_config(ctx, codebook, data)
+    for d in datas.values():
+        status = parser.check_config(ctx, codebook, d)
         if len(status) > 0:
-            LOGGER.error(status)
+            logger.error(status)
             return
 
+    logger.info("Preprocessing data")
     global_plotting_datas = {}
-    for label, data in datas.items():
-        global_plotting_datas[label] = process.process_data(data, codebook, ctx)
+    for label, d in datas.items():
+        global_plotting_datas[label] = process.process_data(d, codebook, ctx)
         if isinstance(global_plotting_datas[label], str):
-            LOGGER.error(global_plotting_datas[label])
+            logger.error(global_plotting_datas[label])
             return
-    LOGGER.info("Preprocessed data")
 
     # number of question blocks -> number of plots
     n_blocks = len(global_plotting_datas[list(global_plotting_datas.keys())[0]])
 
-    if plot_type != 'timeline':
-        global_plotting_datas = global_plotting_datas[list(global_plotting_datas.keys())[0]]
+    if type != "timeline":
+        global_plotting_datas = global_plotting_datas[
+            list(global_plotting_datas.keys())[0]
+        ]
 
-    LOGGER.info("Producing plots... \n")
-    if plot_type == 'bars':
-        exec_func = getattr(barplot, 'plot_barplots')
-    elif plot_type == 'lines':
-        exec_func = getattr(lineplot, 'plot_lineplots')
-    elif plot_type == 'histograms':
-        exec_func = getattr(histogram, 'plot_histograms')
-    elif plot_type == 'timeline':
-        exec_func = getattr(timeline, 'plot_timelines')
+    if type == "bars":
+        exec_func = barplot.plot_barplots
+    elif type == "lines":
+        exec_func = lineplot.plot_lineplots
+    elif type == "histograms":
+        exec_func = histogram.plot_histograms
+    elif type == "timeline":
+        exec_func = timeline.plot_timelines
     else:
-        raise Exception(f"Plot type {plot_type} does not exist.")
+        raise Exception(f"Plot type {type} does not exist.")
 
-    if not serial:
-        LOGGER.debug("Running in parallel mode")
-        LOGGER.warning("DEPRECATED")
-        with Pool() as p:
-            p.map(
-                partial(exec_func, global_plotting_datas, ctx=ctx),
-                list(range(len(global_plotting_datas))))
-    else:
-        LOGGER.debug("Running in serial mode")
-        # loop over question blocks and produce one plot for each
-        # question block
-        for xx in tqdm(range(n_blocks)):
-            exec_func(xx, global_plotting_datas, ctx)
-
-    LOGGER.info("nice-plots finished without errors :)")
+    logger.info("Producing plots")
+    # loop over question blocks and produce one plot for each
+    for xx in tqdm(range(n_blocks)):
+        exec_func(xx, global_plotting_datas, ctx)
+    logger.info("nice-plots finished without errors :)")
 
 
-if __name__ == '__main__':
-    main_cli()
+@click.group()
+def cli():
+    pass
+
+
+@cli.command(
+    name="run", help="Nice-plots is a tool to quickly visualize QM survey data"
+)
+@click.option(
+    "-c",
+    "--config",
+    required=True,
+    type=click.Path(path_type=Path),
+    help="Path to the nice-plots configuration file. See examples/example_config.yml for example.",
+)
+@click.option(
+    "-d",
+    "--data",
+    required=True,
+    multiple=True,
+    type=click.Path(path_type=Path),
+    help="Path to the data file, or list of such paths (in csv format)",
+)
+@click.option(
+    "-b",
+    "--book",
+    required=True,
+    type=click.Path(path_type=Path),
+    help="Path to the codebook file (in csv format)",
+)
+@click.option(
+    "-n",
+    "--name",
+    required=False,
+    default="output1",
+    type=str,
+    help="Name prefix for output plots. Serves also as output directory name. NOTE: If there are configs and codebooks in the output directory they will be used instead of the global codebook and config files specified by the config_path and codebook_path arguments.",
+)
+@click.option(
+    "-t",
+    "--type",
+    required=False,
+    default="bars",
+    type=click.Choice(["bars", "lines", "histograms", "timeline"]),
+    help="Type of plots to produce. If type=timeline expects a list of data_paths and also time_labels",
+)
+@click.option(
+    "-f",
+    "--format",
+    required=False,
+    default="pdf",
+    type=click.Choice(["pdf", "svg", "png"]),
+    help="Format of the output plots.",
+)
+@click.option(
+    "--clear_cache",
+    required=False,
+    is_flag=True,
+    default=False,
+    help="Reset cache directory before running.",
+)
+@click.option(
+    "-v",
+    "--verbosity",
+    required=False,
+    default="3",
+    type=click.Choice(["1", "2", "3", "4"]),
+    help="Verbosity level (1=error, 2=warning, 3=info, 4=debug). Defaults to 3.",
+)
+@click.option(
+    "--time_labels",
+    required=False,
+    multiple=True,
+    default=[""],
+    help="Labels for the different data sets (only used if plot_type=timeline).",
+)
+def cli_main(
+    config: Path,
+    data: Tuple[Path],
+    book: Path,
+    name: str,
+    type: str,
+    format: str,
+    clear_cache: bool,
+    verbosity: str,
+    time_labels: Tuple[str],
+) -> None:
+    main(config, data, book, name, type, format, clear_cache, verbosity, time_labels)
+
+
+if __name__ == "__main__":
+    cli()

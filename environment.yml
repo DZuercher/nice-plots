@@ -9,12 +9,16 @@ dependencies:
   - pytest-cov
   - pytest-xdist # adds distributed tests
   - pip
-  - sqlfluff=2.3.5 # keep in syn w. pre-commit hook
   - nb_black
   - yaml
   - pydantic
   - matplotlib-base
   - pandas
   - seaborn
+  - click
+  - os
+  - subprocess
+  - platform
+  - tqdm
   # documentation
   - sphinx
