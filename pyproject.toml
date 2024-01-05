@@ -1,0 +1,108 @@
+[build-system]
+requires = ['setuptools', 'setuptools-scm', 'wheel']
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+
+[project]
+name = "nice-plots"
+description = "Plotting library for QM reports"
+readme = "README.rst"
+dynamic = ["version"]
+authors = [
+  {name = "Dominik Zuercher", email = "dominikzuercher1999@gmail.com"},
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+]
+requires-python = ">=3.0"
+
+[project.urls]
+repository = "https://github.com/DZuercher/nice-plots"
+
+[tool.setuptools.packages.find]
+include = ["niceplots"]
+namespaces = false
+
+[project.scripts]
+nice-plots = "niceplots.main:main_cli"
+
+[tool.setuptools.package-data]
+
+[tool.black]
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+ensure_newline_before_comments = true
+line_length = 88
+known_first_party = "nice-plots"
+skip_glob = '\.eggs/*,\.git/*,\.venv/*,build/*,dist/*'
+default_section = 'THIRDPARTY'
+
+[tool.mypy]
+python_version = '3.10'
+ignore_missing_imports = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+
+[tool.docformatter]
+pre-summary-newline = true
+recursive = true
+wrap-descriptions = 88
+wrap-summaries = 88
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
+markers = [
+]
+
+
+[tool.ruff]
+ignore = [
+    "B008", # B008 Do not perform function call `pd.to_datetime` in argument defaults
+    "C901",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D205", # D205 1 blank line required between summary line and description
+    "D400", # D400 [*] First line should end with a period
+    "D401", # D401 First line of docstring should be in imperative mood
+    "E501",
+]
+line-length = 88
+select = [
+    # flake8-bugbear
+    "B",
+    # pydocstyle
+    "D",
+    # pycodestyle
+    "E", "W",
+    # pyflakes
+    "F",
+    # isort
+    "I",
+    # pep8-naming
+    "N",
+    # pyupgrade
+    "UP",
+]
+
+[tool.ruff.mccabe]
+max-complexity = 18
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
