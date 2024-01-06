@@ -85,65 +85,6 @@ def check_config(ctx, codebook, data):
                 )
     return ""
 
-
-def load_config(config_path, output_directory, output_name):
-    """
-    Loads the default config file from config_path.
-    Overrides with values from local config file in output_directory.
-    Creates the local config file in output_directory if it does not exist already.
-    :param config_path: Path to the default config file.
-    :param output_directory: Output directory.
-    :return : Directory holding config values.
-    """
-    # load default config
-    default_config_path = str(config_path)
-    with open(default_config_path) as f:
-        try:
-            ctx = yaml.load(f, yaml.FullLoader)
-        except Exception as e:
-            status = f"Could not load default config file from path {default_config_path}. Error: {e}"
-            return status
-    LOGGER.debug(f"Loaded default configuration file from {default_config_path}")
-
-    # check if config in output directory already exists, create otherwise
-    output_config = f"{output_directory}/config_{output_name}.yml"
-    if not os.path.exists(output_config):
-        shutil.copyfile(config_path, output_config)
-        LOGGER.info(
-            f"Copied default config file to output directory: {config_path} -> {output_config}"
-        )
-
-    # load output config file
-    with open(output_config) as f:
-        try:
-            user_ctx = yaml.load(f, yaml.FullLoader)
-        except Exception as e:
-            status = f"Could not load config file from path {output_config}. Error: {e}"
-            return status
-    LOGGER.info(f"Using configuration file in: {output_config}")
-
-    # override defaults
-    for obj in user_ctx:
-        if obj in ctx:
-            LOGGER.debug(
-                "Overriding default value of config argument "
-                f"{obj} -> {user_ctx[obj]}"
-            )
-            ctx[obj] = user_ctx[obj]
-
-    # add some extra variables
-    ctx["output_name"] = output_name
-    ctx["config_file"] = output_config
-    ctx["output_directory"] = output_directory
-
-    LOGGER.debug("+" * 50 + " CONFIG " + "+" * 50)
-    for item in ctx.items():
-        LOGGER.debug(f"{item[0]} : {item[1]}")
-    LOGGER.debug("+" * 108)
-
-    return ctx
-
-
 def check_codebook(codebook, ctx):
     """
     Checks validity of codebook.
