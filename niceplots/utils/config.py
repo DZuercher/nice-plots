@@ -1,10 +1,15 @@
-from niceplots.utils.nice_logger import init_logger, set_logger_level
-import yaml
+import os
 from pathlib import Path
 from typing import Dict
+
+import yaml
+
+from niceplots.utils.nice_logger import init_logger, set_logger_level
+
 logger = init_logger(__file__)
 
-class ConfigBase():
+
+class ConfigBase:
     def update(self, config_dict: Dict) -> None:
         for key, value in config_dict.items():
             setattr(self, key, value)
@@ -26,8 +31,9 @@ class DataConfiguration(ConfigBase):
         self.mapping_label = "Value Codes"
         self.missing_label = "Missing Code"
         self.no_answer_code = 999
-        self.filters = {}
+        self.filters: dict = {}
         self.delimiter = ","
+
 
 class PlottingConfiguration(ConfigBase):
     def __init__(self) -> None:
@@ -36,48 +42,57 @@ class PlottingConfiguration(ConfigBase):
         self.fontsize = 15
         self.fontsize_stats = 12
         self.nbins = 5
-        self.unit = ''
+        self.unit = ""
+
 
 class BarplotsConfiguration(ConfigBase):
     def __init__(self) -> None:
         self.invert = False
-        self.color_scheme = 'RdYlGn'
+        self.color_scheme = "RdYlGn"
         self.height = 0.7
         self.dist = 0.3
         self.major_dist = 1
-        self.bar_text_color = 'black'
+        self.bar_text_color = "black"
         self.padding = 0.3
+
 
 class LineplotsConfiguration(ConfigBase):
     def __init__(self) -> None:
         self.invert = False
-        self.colors = ['C0', 'C1', 'C2', 'C3', 'C4']
+        self.colors = ["C0", "C1", "C2", "C3", "C4"]
         self.height = 0.7
         self.dist = 0.3
         self.padding = 3.0
         self.label_padding = 0.2
 
+
 class HistogramsConfiguration(ConfigBase):
     def __init__(self) -> None:
-        self.colors = ['C0', 'C1', 'C2', 'C3', 'C4']
+        self.colors = ["C0", "C1", "C2", "C3", "C4"]
         self.padding = 0.2
         self.bar_pad = 0.1
         self.rwidth = 0.8
         self.dist = 0.5
 
+
 class TimelinesConfiguration(ConfigBase):
     def __init__(self) -> None:
         self.dist = 0.6
         self.height = 3.0
-        self.colors = ['blue', 'red']
+        self.colors = ["blue", "red"]
 
-class Configuration():
-    def __init__(self, config_path: Path | None = None,
-                 verbosity: str = "3",
-                 output_name: str = "output1",
-                 path_output_config: str | None = None,
-                 output_directory: str | None = None,
-                 output_format: str = "pdf") -> None:
+
+class Configuration:
+    def __init__(
+        self,
+        config_path: Path | None = None,
+        verbosity: str = "3",
+        output_name: str = "output1",
+        path_output_config: str | None = None,
+        output_directory: str | None = None,
+        output_format: str = "pdf",
+        cache_directory: str = "~/.cache/nice-plots",
+    ) -> None:
         set_logger_level(logger, verbosity)
 
         # defaults
@@ -93,11 +108,12 @@ class Configuration():
         self.config_file = path_output_config
         self.output_directory = output_directory
         self.verbosity = verbosity
+        self.cache_directory = cache_directory
 
         if config_path is not None:
             # initialize using config file
 
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config_dict = yaml.load(f, yaml.FullLoader)
 
             # override
@@ -111,19 +127,33 @@ class Configuration():
             self.histograms.update(config_dict["histograms"])
             self.timelines.update(config_dict["timelines"])
 
-            logger.debug(f"Initializing config instance using configuration file in {config_path}")
+            logger.debug(
+                f"Initializing config instance using configuration file in {config_path}"
+            )
         else:
-            logger.debug(f"Initializing config instance using default values")
+            logger.debug("Initializing config instance using default values")
 
-        self.sub_attrs = ["data", "plotting", "barplots", "lineplots", "histograms", "timelines"]
-        self.main_attrs = ["output_name", "config_file", "output_directory", "verbosity"]
+        self.sub_attrs = [
+            "data",
+            "plotting",
+            "barplots",
+            "lineplots",
+            "histograms",
+            "timelines",
+        ]
+        self.main_attrs = [
+            "output_name",
+            "config_file",
+            "output_directory",
+            "verbosity",
+            "cache_directory",
+        ]
 
         self.check_config()
 
         self.print_config()
 
     def write_output_config(self) -> None:
-
         config_dict = {}
         config_dict["data"] = vars(self.data)
         config_dict["plotting"] = vars(self.plotting)
@@ -132,9 +162,10 @@ class Configuration():
         config_dict["histograms"] = vars(self.histograms)
         config_dict["timelines"] = vars(self.timelines)
 
-        with open(self.config_file, "w+") as f:
-            yaml.dump(config_dict, f)
-        logger.debug(f"Wrote configuration to file {self.config_file}")
+        if self.config_file is not None:
+            with open(self.config_file, "w+") as f:
+                yaml.dump(config_dict, f)
+            logger.debug(f"Wrote configuration to file {self.config_file}")
 
     def print_config(self) -> None:
         logger.debug("+" * 50 + " CONFIG " + "+" * 50)
@@ -148,3 +179,51 @@ class Configuration():
     def check_config(self) -> None:
         for attr in self.sub_attrs:
             getattr(self, attr).check()
+
+
+def get_cache(clear_cache: bool) -> str:
+    cache_directory = os.path.expanduser("~/.cache/nice-plots")
+    if (os.path.exists(cache_directory)) & clear_cache:
+        logger.warning("Resetting cache")
+        os.rmdir(cache_directory)
+    Path(cache_directory).mkdir(parents=True, exist_ok=True)
+    logger.info(f"Using cache in: {cache_directory}")
+    return cache_directory
+
+
+def get_output_dir(name: str) -> str:
+    output_directory = os.getcwd() + f"/{name}"
+    Path(output_directory).mkdir(parents=True, exist_ok=True)
+    logger.info(f"Using output directory: {output_directory}")
+    return output_directory
+
+
+def setup_config(
+    config_path: Path,
+    name: str,
+    verbosity: str,
+    output_format: str,
+    clear_cache: bool,
+    write_config: bool = False,
+) -> Configuration:
+    path_cache = get_cache(clear_cache)
+    path_output_dir = get_output_dir(name)
+
+    path_output_config = f"{path_output_dir}/config_{name}.yml"
+    if os.path.exists(path_output_config):
+        logger.warning(
+            f"Found already existing configuration file in {path_output_config}. Using it instead of {config_path}"
+        )
+        config_path = Path(path_output_config)
+    config = Configuration(
+        config_path,
+        verbosity,
+        name,
+        path_output_config,
+        path_output_dir,
+        output_format,
+        path_cache,
+    )
+    if write_config:
+        config.write_output_config()
+    return config

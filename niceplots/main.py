@@ -1,20 +1,19 @@
 # Authors: Dominik Zuercher, Valeria Glauser
 
-import os
-import pathlib
 from pathlib import Path
 from typing import Tuple
 
 import click
-from tqdm import tqdm
 
-from niceplots import barplot, histogram, lineplot, parser, process, timeline
+from niceplots.utils.config import setup_config
 from niceplots.utils.nice_logger import init_logger, set_logger_level
-from niceplots.utils.config import Configuration
 
 logger = init_logger(__file__)
 
-def check_arguments(data_paths: Tuple[Path], time_labels: Tuple[str], plot_type: str) -> None:
+
+def check_arguments(
+    data_paths: Tuple[Path], time_labels: Tuple[str], plot_type: str
+) -> None:
     if plot_type == "timeline":
         if len(time_labels) != len(data_paths):
             raise Exception(
@@ -22,29 +21,7 @@ def check_arguments(data_paths: Tuple[Path], time_labels: Tuple[str], plot_type:
                 "of labels and data sets provided."
             )
 
-def get_cache(clear_cache: bool) -> str:
-    cache_directory = os.path.expanduser("~/.cache/nice-plots")
-    if (os.path.exists(cache_directory)) & clear_cache:
-        logger.warning("Resetting cache")
-        os.rmdir(cache_directory)
-    pathlib.Path(cache_directory).mkdir(parents=True, exist_ok=True)
-    logger.info(f"Using cache in: {cache_directory}")
-    return cache_directory
 
-def get_output_dir(name: str) -> str:
-    output_directory = os.getcwd() + f"/{name}"
-    pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
-    logger.info(f"Using output directory: {output_directory}")
-    return output_directory
-
-def get_config(config_path: Path, output_dir: str, name: str, verbosity: str, output_format: str) -> Configuration:
-    path_output_config = f"{output_dir}/config_{name}.yml"
-    if os.path.exists(path_output_config):
-        logger.warning(f"Found already existing configuration file in {path_output_config}. Using it instead of {config_path}")
-        config_path = path_output_config
-    config = Configuration(config_path, verbosity, name, path_output_config, output_dir, output_format)
-    config.write_output_config()
-    return config
 def main(
     data_paths: Tuple[Path],
     codebook: Path,
@@ -56,7 +33,6 @@ def main(
     verbosity: str,
     time_labels: Tuple[str],
 ) -> None:
-
     set_logger_level(logger, verbosity)
     logger.info("Starting nice-plots")
 
@@ -66,10 +42,9 @@ def main(
     logger.info(f"Set data file path(s) -> {config_path}")
     logger.info(f"Set codebook file path -> {config_path}")
 
-    path_cache = get_cache(clear_cache)
-    path_output_dir = get_output_dir(name)
-    config = get_config(config_path, path_output_dir, name, verbosity, output_format)
-
+    _ = setup_config(
+        config_path, name, verbosity, output_format, clear_cache, write_config=True
+    )
 
     # ctx = parser.load_config(config_path, path_output_dir, name)
     #
@@ -217,7 +192,17 @@ def cli_main(
     verbosity: str,
     time_labels: Tuple[str],
 ) -> None:
-    main(data_paths, codebook, config_path, name, plot_type, output_format, clear_cache, verbosity, time_labels)
+    main(
+        data_paths,
+        codebook,
+        config_path,
+        name,
+        plot_type,
+        output_format,
+        clear_cache,
+        verbosity,
+        time_labels,
+    )
 
 
 if __name__ == "__main__":
