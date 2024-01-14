@@ -60,6 +60,7 @@ def setup_data(
     data_paths: Tuple[Path, ...],
     data_labels: Tuple[str, ...],
     write_data: bool = False,
+    full_rerun: bool = True,
 ) -> DataCollection:
     set_logger_level(logger, config.verbosity)
 
@@ -67,7 +68,7 @@ def setup_data(
     data_collection = DataCollection(config, path_output_data)
 
     # check if there is already a data file in the output directory
-    if os.path.exists(path_output_data):
+    if os.path.exists(path_output_data) and not full_rerun:
         logger.warning(
             f"Found already existing data in {path_output_data}. Using it instead of {data_paths}"
         )

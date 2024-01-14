@@ -53,7 +53,10 @@ class CodeBook:
 
 
 def setup_codebook(
-    config: Configuration, path_codebook: Path, write_codebook: bool = False
+    config: Configuration,
+    path_codebook: Path,
+    write_codebook: bool = False,
+    full_rerun: bool = True,
 ) -> CodeBook:
     set_logger_level(logger, config.verbosity)
 
@@ -61,7 +64,7 @@ def setup_codebook(
     path_output_codebook = Path(
         f"{config.output_directory}/codebook_{config.output_name}.csv"
     )
-    if os.path.exists(path_output_codebook):
+    if os.path.exists(path_output_codebook) and not full_rerun:
         logger.warning(
             f"Found already existing codebook file in {path_output_codebook}. Using it instead of {path_codebook}"
         )

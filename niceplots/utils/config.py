@@ -208,6 +208,7 @@ def setup_config(
     output_format: str,
     clear_cache: bool,
     write_config: bool = False,
+    full_rerun: bool = True,
 ) -> Configuration:
     set_logger_level(logger, verbosity)
 
@@ -215,7 +216,7 @@ def setup_config(
     path_output_dir = get_output_dir(name, prefix)
 
     path_output_config = Path(f"{path_output_dir}/config_{name}.yml")
-    if os.path.exists(path_output_config):
+    if os.path.exists(path_output_config) and not full_rerun:
         logger.warning(
             f"Found already existing configuration file in {path_output_config}. Using it instead of {config_path}"
         )

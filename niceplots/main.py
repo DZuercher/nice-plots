@@ -32,6 +32,7 @@ def main(
     verbosity: str,
     data_labels: Tuple[str],
     prefix: Path,
+    full_rerun: bool,
 ) -> None:
     set_logger_level(logger, verbosity)
     logger.info("Starting nice-plots")
@@ -50,12 +51,17 @@ def main(
         output_format,
         clear_cache,
         write_config=True,
+        full_rerun=full_rerun,
     )
 
     # Load codebook
-    _ = setup_codebook(config, codebook_path, write_codebook=True)
+    _ = setup_codebook(
+        config, codebook_path, write_codebook=True, full_rerun=full_rerun
+    )
 
-    _ = setup_data(config, data_paths, data_labels, write_data=True)
+    _ = setup_data(
+        config, data_paths, data_labels, write_data=True, full_rerun=full_rerun
+    )
     # # Load data
     # datas = {}
     # for path, label in zip(data_paths, time_labels):
@@ -189,6 +195,12 @@ def cli():
     default=os.getcwd(),
     help="Location in which nice-plot output directories are written. Default is CWD.",
 )
+@click.option(
+    "--full_rerun",
+    type=bool,
+    default=False,
+    help="Ignore config, codebook and data files in target destination and directly use supplied files.",
+)
 def cli_main(
     data: Tuple[Path],
     codebook: Path,
@@ -200,6 +212,7 @@ def cli_main(
     verbosity: str,
     data_labels: Tuple[str],
     prefix: Path,
+    full_rerun: bool,
 ) -> None:
     main(
         data,
@@ -212,6 +225,7 @@ def cli_main(
         verbosity,
         data_labels,
         prefix,
+        full_rerun,
     )
 
 
