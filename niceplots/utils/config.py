@@ -88,12 +88,12 @@ class Configuration:
         config_path: Path | None = None,
         verbosity: str = "3",
         output_name: str = "output1",
-        path_output_config: str | None = None,
-        output_directory: str | None = None,
+        path_output_config: Path | None = None,
+        output_directory: Path | None = None,
         output_format: str = "pdf",
-        cache_directory: str = "~/.cache/nice-plots",
+        cache_directory: Path = Path("~/.cache/nice-plots"),
     ) -> None:
-        set_logger_level(logger, verbosity)
+        logger.info("Initializing nice-plots configuration.")
 
         # defaults
         self.data = DataConfiguration()
@@ -109,6 +109,7 @@ class Configuration:
         self.output_directory = output_directory
         self.verbosity = verbosity
         self.cache_directory = cache_directory
+        self.codebook_file = Path("")
 
         if config_path is not None:
             # initialize using config file
@@ -127,11 +128,11 @@ class Configuration:
             self.histograms.update(config_dict["histograms"])
             self.timelines.update(config_dict["timelines"])
 
-            logger.debug(
-                f"Initializing config instance using configuration file in {config_path}"
+            logger.info(
+                f"Initializing configuration instance using configuration file in {config_path}"
             )
         else:
-            logger.debug("Initializing config instance using default values")
+            logger.debug("Initializing configuration instance using default values")
 
         self.sub_attrs = [
             "data",
@@ -165,7 +166,7 @@ class Configuration:
         if self.config_file is not None:
             with open(self.config_file, "w+") as f:
                 yaml.dump(config_dict, f)
-            logger.debug(f"Wrote configuration to file {self.config_file}")
+            logger.info(f"Wrote configuration to file {self.config_file}")
 
     def print_config(self) -> None:
         logger.debug("+" * 50 + " CONFIG " + "+" * 50)
@@ -181,24 +182,25 @@ class Configuration:
             getattr(self, attr).check()
 
 
-def get_cache(clear_cache: bool) -> str:
-    cache_directory = os.path.expanduser("~/.cache/nice-plots")
+def get_cache(clear_cache: bool) -> Path:
+    cache_directory = Path(os.path.expanduser("~/.cache/nice-plots"))
     if (os.path.exists(cache_directory)) & clear_cache:
         logger.warning("Resetting cache")
         os.rmdir(cache_directory)
-    Path(cache_directory).mkdir(parents=True, exist_ok=True)
+    cache_directory.mkdir(parents=True, exist_ok=True)
     logger.info(f"Using cache in: {cache_directory}")
     return cache_directory
 
 
-def get_output_dir(name: str) -> str:
-    output_directory = os.getcwd() + f"/{name}"
-    Path(output_directory).mkdir(parents=True, exist_ok=True)
+def get_output_dir(name: str, prefix: Path) -> Path:
+    output_directory = Path(f"{prefix}/{name}")
+    output_directory.mkdir(parents=True, exist_ok=True)
     logger.info(f"Using output directory: {output_directory}")
     return output_directory
 
 
 def setup_config(
+    prefix: Path,
     config_path: Path,
     name: str,
     verbosity: str,
@@ -206,15 +208,17 @@ def setup_config(
     clear_cache: bool,
     write_config: bool = False,
 ) -> Configuration:
-    path_cache = get_cache(clear_cache)
-    path_output_dir = get_output_dir(name)
+    set_logger_level(logger, verbosity)
 
-    path_output_config = f"{path_output_dir}/config_{name}.yml"
+    path_cache = get_cache(clear_cache)
+    path_output_dir = get_output_dir(name, prefix)
+
+    path_output_config = Path(f"{path_output_dir}/config_{name}.yml")
     if os.path.exists(path_output_config):
         logger.warning(
             f"Found already existing configuration file in {path_output_config}. Using it instead of {config_path}"
         )
-        config_path = Path(path_output_config)
+        config_path = path_output_config
     config = Configuration(
         config_path,
         verbosity,
@@ -226,4 +230,5 @@ def setup_config(
     )
     if write_config:
         config.write_output_config()
+    logger.info("Finished setting up nice-plots configuration.")
     return config

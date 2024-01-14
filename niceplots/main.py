@@ -1,10 +1,11 @@
 # Authors: Dominik Zuercher, Valeria Glauser
-
+import os
 from pathlib import Path
 from typing import Tuple
 
 import click
 
+from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
 from niceplots.utils.nice_logger import init_logger, set_logger_level
 
@@ -24,7 +25,7 @@ def check_arguments(
 
 def main(
     data_paths: Tuple[Path],
-    codebook: Path,
+    codebook_path: Path,
     config_path: Path,
     name: str,
     plot_type: str,
@@ -32,6 +33,7 @@ def main(
     clear_cache: bool,
     verbosity: str,
     time_labels: Tuple[str],
+    prefix: Path,
 ) -> None:
     set_logger_level(logger, verbosity)
     logger.info("Starting nice-plots")
@@ -42,19 +44,19 @@ def main(
     logger.info(f"Set data file path(s) -> {config_path}")
     logger.info(f"Set codebook file path -> {config_path}")
 
-    _ = setup_config(
-        config_path, name, verbosity, output_format, clear_cache, write_config=True
+    config = setup_config(
+        prefix,
+        config_path,
+        name,
+        verbosity,
+        output_format,
+        clear_cache,
+        write_config=True,
     )
 
-    # ctx = parser.load_config(config_path, path_output_dir, name)
-    #
-    # # Load codebook
-    # codebook = parser.load_codebook(ctx, codebook)
-    # if isinstance(codebook, str):
-    #     logger.error(codebook)
-    #     return
-    # logger.info("Loaded codebook")
-    #
+    # Load codebook
+    _ = setup_codebook(config, codebook_path)
+
     # # Load data
     # datas = {}
     # for path, label in zip(data_paths, time_labels):
@@ -116,7 +118,7 @@ def cli():
 )
 @click.option(
     "-d",
-    "--data_paths",
+    "--data",
     required=True,
     multiple=True,
     type=click.Path(path_type=Path),
@@ -131,7 +133,7 @@ def cli():
 )
 @click.option(
     "-c",
-    "--config_path",
+    "--config",
     type=click.Path(path_type=Path),
     help="Path to the nice-plots configuration file. See examples/example_config.yml for example.",
 )
@@ -141,7 +143,7 @@ def cli():
     required=False,
     default="output1",
     type=str,
-    help="Name prefix for output plots. Serves also as output directory name. NOTE: If there are configs and codebooks in the output directory they will be used instead of the global codebook and config files specified by the config_path and codebook_path arguments.",
+    help="Name for output plots. Serves also as output directory name. NOTE: If there are configs and codebooks in the output directory they will be used instead of the global codebook and config files specified by the config_path and codebook_path arguments.",
 )
 @click.option(
     "-t",
@@ -181,27 +183,36 @@ def cli():
     default=[""],
     help="Labels for the different data sets (only used if plot_type=timeline).",
 )
+@click.option(
+    "-p",
+    "--prefix",
+    type=click.Path(path_type=Path),
+    default=os.getcwd(),
+    help="Location in which nice-plot output directories are written. Default is CWD.",
+)
 def cli_main(
-    data_paths: Tuple[Path],
+    data: Tuple[Path],
     codebook: Path,
-    config_path: Path,
+    config: Path,
     name: str,
     plot_type: str,
     output_format: str,
     clear_cache: bool,
     verbosity: str,
     time_labels: Tuple[str],
+    prefix: Path,
 ) -> None:
     main(
-        data_paths,
+        data,
         codebook,
-        config_path,
+        config,
         name,
         plot_type,
         output_format,
         clear_cache,
         verbosity,
         time_labels,
+        prefix,
     )
 
 
