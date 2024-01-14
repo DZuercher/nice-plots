@@ -7,20 +7,18 @@ import click
 
 from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
+from niceplots.utils.data import setup_data
 from niceplots.utils.nice_logger import init_logger, set_logger_level
 
 logger = init_logger(__file__)
 
 
-def check_arguments(
-    data_paths: Tuple[Path], time_labels: Tuple[str], plot_type: str
-) -> None:
-    if plot_type == "timeline":
-        if len(time_labels) != len(data_paths):
-            raise Exception(
-                "Can only make time series plot if same number "
-                "of labels and data sets provided."
-            )
+def check_arguments(data_paths: Tuple[Path], time_labels: Tuple[str]) -> None:
+    if len(time_labels) != len(data_paths):
+        raise Exception(
+            "Can only make time series plot if same number "
+            "of labels and data sets provided."
+        )
 
 
 def main(
@@ -32,13 +30,13 @@ def main(
     output_format: str,
     clear_cache: bool,
     verbosity: str,
-    time_labels: Tuple[str],
+    data_labels: Tuple[str],
     prefix: Path,
 ) -> None:
     set_logger_level(logger, verbosity)
     logger.info("Starting nice-plots")
 
-    check_arguments(data_paths, time_labels, plot_type)
+    check_arguments(data_paths, data_labels)
 
     logger.info(f"Set configuration file path -> {config_path}")
     logger.info(f"Set data file path(s) -> {config_path}")
@@ -55,8 +53,9 @@ def main(
     )
 
     # Load codebook
-    _ = setup_codebook(config, codebook_path)
+    _ = setup_codebook(config, codebook_path, write_codebook=True)
 
+    _ = setup_data(config, data_paths, data_labels, write_data=True)
     # # Load data
     # datas = {}
     # for path, label in zip(data_paths, time_labels):
@@ -177,10 +176,10 @@ def cli():
     help="Verbosity level (1=error, 2=warning, 3=info, 4=debug). Defaults to 3.",
 )
 @click.option(
-    "--time_labels",
+    "--data_labels",
     required=False,
     multiple=True,
-    default=[""],
+    default=["data"],
     help="Labels for the different data sets (only used if plot_type=timeline).",
 )
 @click.option(
@@ -199,7 +198,7 @@ def cli_main(
     output_format: str,
     clear_cache: bool,
     verbosity: str,
-    time_labels: Tuple[str],
+    data_labels: Tuple[str],
     prefix: Path,
 ) -> None:
     main(
@@ -211,7 +210,7 @@ def cli_main(
         output_format,
         clear_cache,
         verbosity,
-        time_labels,
+        data_labels,
         prefix,
     )
 

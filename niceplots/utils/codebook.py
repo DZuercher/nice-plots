@@ -20,7 +20,7 @@ class CodeBook:
             # TODO dtypes
             # dtype=[]
         )
-        self.path_codebook = Path(path_output_codebook)
+        self.path_codebook = path_output_codebook
         self.name_label = config.data.name_label
         self.question_label = config.data.question_label
         self.block_id_label = config.data.block_id_label
@@ -45,10 +45,10 @@ class CodeBook:
         # TODO check
         self.check()
 
-    def write_output_codebook(self):
+    def write_output_codebook(self) -> None:
         self.codebook.to_csv(self.path_codebook, index=False)
 
-    def check(self):
+    def check(self) -> None:
         pass
 
 

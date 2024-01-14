@@ -110,6 +110,7 @@ class Configuration:
         self.verbosity = verbosity
         self.cache_directory = cache_directory
         self.codebook_file = Path("")
+        self.data_file = Path("")
 
         if config_path is not None:
             # initialize using config file

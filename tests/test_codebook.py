@@ -13,7 +13,7 @@ name = "test_codebook"
 
 
 def test_codebook():
-    config = setup_config(prefix, config_path, name, "4", "svg", False)
+    config = setup_config(prefix, config_path, name, "4", "pdf", False)
     codebook = setup_codebook(config, codebook_path)
 
     assert config.codebook_file == codebook.path_codebook
