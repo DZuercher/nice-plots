@@ -45,6 +45,17 @@ class CodeBook:
         # TODO check
         self.check()
 
+    def readin_niceplots_codebook_file(self, codebook_path: Path) -> None:
+        self.codebook = pd.read_csv(
+            codebook_path,
+            sep=self.delimiter,
+        )
+
+        self.path_codebook = Path(codebook_path)
+
+        # TODO check
+        self.check()
+
     def write_output_codebook(self) -> None:
         self.codebook.to_csv(self.path_codebook, index=False)
 
@@ -60,18 +71,19 @@ def setup_codebook(
 ) -> CodeBook:
     set_logger_level(logger, config.verbosity)
 
-    # check if there is already a codebook in the output directory
     path_output_codebook = Path(
         f"{config.output_directory}/codebook_{config.output_name}.csv"
     )
+    codebook = CodeBook(config, path_output_codebook)
+
+    # check if there is already a codebook in the output directory
     if os.path.exists(path_output_codebook) and not full_rerun:
         logger.warning(
             f"Found already existing codebook file in {path_output_codebook}. Using it instead of {path_codebook}"
         )
-        path_codebook = path_output_codebook
-
-    codebook = CodeBook(config, path_output_codebook)
-    codebook.readin_codebook_file(path_codebook)
+        codebook.readin_niceplots_codebook_file(path_output_codebook)
+    else:
+        codebook.readin_codebook_file(path_codebook)
 
     if write_codebook:
         codebook.write_output_codebook()
