@@ -14,6 +14,7 @@ dependencies:
   - pydantic
   - matplotlib-base
   - pandas
+  - openpyxl
   - seaborn
   - click
   - os

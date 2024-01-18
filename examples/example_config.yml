@@ -2,18 +2,23 @@
 # EXAMPLE CONFIGURATION FILE FOR NICE-PLOTS
 ###########################################
 
+# This example config shows all the available options as well as their default values
+# When writing your own config you do not need to specify all the options. For options that
+# you do not use the default values are used.
+# TODO: Actually update the values below to the default values
+
 data:
   # Name of the column in the codebook that contains the number identifying to
   # which question block the question belongs.
   # Questions with -1 are ignored when plotting.
-  block_id_label : 'Group'
+  block_id_label: "Group"
 
   # Name of the column in the codebook that contains the question text.
-  question_label : 'Label'
+  question_label: "Label"
 
   # Name of the column in the codebook that contains the names of the variables.
   # These names have to match the names of the variables in the data table!
-  name_label : 'Variable'
+  name_label: "Variable"
 
   # Name of the column in the codebook that contains the mapping from
   # code numbers in the data table to labels.
@@ -30,14 +35,14 @@ data:
   # 1 = nie
   # 2 = manchmal
   # 3 = immer
-  mapping_label : 'Value Codes'
+  mapping_label: "Value Codes"
 
   # The name of the column in the codebook indicating the missing code
   # (question not filled out by participant)
-  missing_label : 'Missing Code'
+  missing_label: "Missing Code"
 
   # Code used to identify participants that chose no answer
-  no_answer_code : 999
+  no_answer_code: 999
 
   # Optional filter functions. Allows to split data into multiple categories
   # based on the values of certain variables. The different categories are compared
@@ -46,116 +51,114 @@ data:
   # and each filter follows the format: 'group name' : 'varibale operator value'
   # NOTE: The whitespaces matter!
   # Example:
-  filters :
-    Group 1 : 'VAR02 == 1'
-    Others : '(VAR02 == 2) | (VAR02 == 4)'
+  filters:
+    Group 1: "VAR02 == 1"
+    Others: "(VAR02 == 2) | (VAR02 == 4)"
 
   # The delimiter in the codebook and data table (NOTE: Excel uses ; by default)
-  delimiter : ','
+  delimiter: ","
 
 plotting:
   # Total plot width (careful, changing this will change the aspect ratio!)
-  plot_width : 8 # in inches
+  plot_width: 8 # in inches
 
   # output format
   format: pdf
 
   # Global fontsize in plots
-  fontsize : 15
+  fontsize: 15
 
   # fontsize for stats and legend
-  fontsize_stats : 12
+  fontsize_stats: 12
 
   # Number of bins used by default to create linear binning scheme.
   # Only used if mapping is none
-  nbins : 5
+  nbins: 5
 
   # Default unit used for legend if mapping is none
-  unit : ''
+  unit: ""
 
 # BARPLOTS OPTIONS
 ############################################################
 barplots:
   # If True the label categories are plotted from largest to smallest.
-  invert : False
+  invert: False
+
   # default colorscheme
-  color_scheme : 'RdYlGn'
+  color_scheme: "RdYlGn"
 
   # Height of the bars in the plots
-  height : 0.7 # in inches
+  height: 0.7 # in inches
 
   # Distance between bars for different categories within a question
   # and also distance to legend
-  dist : 0.3 # in inches
+  dist: 0.3 # in inches
 
   # Distance between bars for different questions
-  major_dist : 1 # in inches
+  major_dist: 1 # in inches
 
   # Color of the numbers in the bars
-  bar_text_color: 'black'
+  text_color: "black"
 
   # Distance between labels and question text.
-  padding : 0.3 # in inches
-
+  padding: 0.3 # in inches
 
 # LINEPLOTS OPTIONS
 ############################################################
 lineplots:
   # If True the label categories are plotted from largest to smallest.
-  # applies to lineplots and barplots
-  invert : False
+  invert: False
+
   # Filter category colors for lineplots
   colors:
-    - 'C0'
-    - 'C1'
-    - 'C2'
-    - 'C3'
-    - 'C4'
+    - "C0"
+    - "C1"
+    - "C2"
+    - "C3"
+    - "C4"
 
   # Height of the line plots
-  height : 0.7 # in inches
+  height: 0.7 # in inches
 
   # Distance between lines plots
-  dist : 0.3 # in inches
+  dist: 0.3 # in inches
 
   # Distance between line plots and the questions at the side
-  padding :  3.0 # in inches
+  padding: 3.0 # in inches
 
   # Distance between line plots and the max and min labels at the side
-  label_padding :  0.2 # in inches
+  label_padding: 0.2 # in inches
 
 # HISTOGRAMS
 ############################################################
 histograms:
   # Distance between labels and plot axis
-  padding : 0.2 # in inches
+  padding: 0.2 # in inches
 
   # Distance between bar and value labels
-  bar_pad : 0.1 # In inches
+  bar_pad: 0.1 # In inches
 
   # Relative width of bars (1 = full bin width)
-  rwidth : 0.8
+  rwidth: 0.8
 
   # distance of stats from corner
-  dist : 0.5 # in inches
+  dist: 0.5 # in inches
 
   # The colors for the bars in the histograms. One per filter category
   colors:
-    - 'C0'
-    - 'C1'
-    - 'C2'
-    - 'C3'
-    - 'C4'
+    - "C0"
+    - "C1"
+    - "C2"
+    - "C3"
+    - "C4"
 
-# TIMELINES 
+# TIMELINES
 ############################################################
 timelines:
-
   height: 3.0
 
   dist: 0.6
 
   colors:
-    - 'blue'
-    - 'red'
-
+    - "blue"
+    - "red"

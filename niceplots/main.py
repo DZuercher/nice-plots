@@ -62,6 +62,7 @@ def main(
     _ = setup_data(
         config, data_paths, data_labels, write_data=True, full_rerun=full_rerun
     )
+
     # # Load data
     # datas = {}
     # for path, label in zip(data_paths, time_labels):

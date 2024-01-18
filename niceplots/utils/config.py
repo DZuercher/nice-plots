@@ -47,23 +47,23 @@ class PlottingConfiguration(ConfigBase):
 
 class BarplotsConfiguration(ConfigBase):
     def __init__(self) -> None:
-        self.invert = False
         self.color_scheme = "RdYlGn"
         self.height = 0.7
         self.dist = 0.3
         self.major_dist = 1
-        self.bar_text_color = "black"
+        self.text_color = "black"
         self.padding = 0.3
+        self.invert = False
 
 
 class LineplotsConfiguration(ConfigBase):
     def __init__(self) -> None:
-        self.invert = False
         self.colors = ["C0", "C1", "C2", "C3", "C4"]
         self.height = 0.7
         self.dist = 0.3
         self.padding = 3.0
         self.label_padding = 0.2
+        self.invert = False
 
 
 class HistogramsConfiguration(ConfigBase):
