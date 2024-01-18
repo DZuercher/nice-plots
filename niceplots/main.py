@@ -55,12 +55,17 @@ def main(
     )
 
     # Load codebook
-    _ = setup_codebook(
+    codebook = setup_codebook(
         config, codebook_path, write_codebook=True, full_rerun=full_rerun
     )
 
     _ = setup_data(
-        config, data_paths, data_labels, write_data=True, full_rerun=full_rerun
+        config,
+        codebook,
+        data_paths,
+        data_labels,
+        write_data=True,
+        full_rerun=full_rerun,
     )
 
     # # Load data

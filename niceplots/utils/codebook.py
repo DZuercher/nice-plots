@@ -127,6 +127,12 @@ class CodeBook:
                     f"Code mapping not unique for question block {block}. Found mappings: {self.codebook[self.codebook.block == block].value_map.drop_duplicates()}"
                 )
 
+    def summarize(self):
+        logger.info(f"Got codebook defining {self.codebook.shape[0]} variables.")
+        blocks = self.codebook.block.unique()
+        blocks = blocks[blocks != -1]
+        logger.info(f"Got codebook defining {len(blocks)} blocks.")
+
 
 def setup_codebook(
     config: Configuration,
@@ -150,6 +156,7 @@ def setup_codebook(
     else:
         codebook.readin_codebook_file(path_codebook)
 
+    codebook.summarize()
     if write_codebook:
         codebook.write_output_codebook()
     logger.info("Finished setting up nice-plots codebook.")

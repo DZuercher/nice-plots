@@ -2,11 +2,13 @@ import os
 import shutil
 from pathlib import Path
 
+from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
 from niceplots.utils.data import setup_data
 
 example_dir = os.path.dirname(__file__) + "/../examples/"
 config_path = Path(example_dir + "example_config.yml")
+codebook_path = Path(example_dir + "example_codebook.csv")
 prefix = Path(example_dir)
 
 
@@ -16,7 +18,8 @@ def test_single_data():
     data_paths = (Path(example_dir + "example_data.csv"),)
 
     config = setup_config(prefix, config_path, name, "4", "pdf", False)
-    data = setup_data(config, data_paths, data_labels)
+    codebook = setup_codebook(config, codebook_path)
+    data = setup_data(config, codebook, data_paths, data_labels)
 
     assert config.data_file == data.path_data
 
@@ -34,7 +37,8 @@ def test_multi_data():
     )
 
     config = setup_config(prefix, config_path, name, "4", "pdf", False)
-    data = setup_data(config, data_paths, data_labels)
+    codebook = setup_codebook(config, codebook_path)
+    data = setup_data(config, codebook, data_paths, data_labels)
 
     assert config.data_file == data.path_data
 

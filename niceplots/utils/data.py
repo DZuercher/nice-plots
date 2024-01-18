@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 import pandas as pd
 
+from niceplots.utils.codebook import CodeBook
 from niceplots.utils.config import Configuration
 from niceplots.utils.nice_logger import init_logger, set_logger_level
 
@@ -15,9 +16,26 @@ class Data:
         self.name = name
         self.data = df
 
-    def check(self):
-        # TODO
-        pass
+    def check(self, codebook: CodeBook):
+        # check that all variables that are in the codebook are also in the data
+        if not set(codebook.codebook.variable).issubset(set(self.data.columns)):
+            missing_vars = set(codebook.codebook.variable) - set(self.data.columns)
+            raise ValueError(
+                f"Data Object {self.name}: Did not find {missing_vars} in data, but they are in the codebook."
+            )
+
+        # check that values in each variable agree with the mapping in the codebook
+        for _, row in codebook.codebook.iterrows():
+            if not row.value_map == "none":
+                continue
+            mapping = eval(row.value_map)
+            if self.data[row.variable].map(mapping).isna().sum() > 0:
+                raise ValueError(
+                    f"Data Object {self.name}: Could not apply code mapping {mapping} to data for variable {row.variable}. Is your data out of range?"
+                )
+
+    def summarize(self):
+        logger.info(f"Data Object {self.name}: Data has {self.data.shape[0]} rows.")
 
 
 class DataCollection:
@@ -50,19 +68,29 @@ class DataCollection:
         setattr(self, name, Data(df, name))
         self.data_object_names.append(name)
 
-    def check(self):
+    def check(self, codebook: CodeBook):
         for name in self.data_object_names:
-            getattr(self, name).check()
+            getattr(self, name).check(codebook)
+
+    def summarize(self):
+        logger.info(
+            f"Got a Data Collection holding {len(self.data_object_names)} data sets"
+        )
+        for name in self.data_object_names:
+            getattr(self, name).summarize()
 
 
 def setup_data(
     config: Configuration,
+    codebook: CodeBook,
     data_paths: Tuple[Path, ...],
     data_labels: Tuple[str, ...],
     write_data: bool = False,
     full_rerun: bool = True,
 ) -> DataCollection:
     set_logger_level(logger, config.verbosity)
+
+    logger.info("Initializing nice-plots data.")
 
     path_output_data = Path(f"{config.output_directory}/data_{config.output_name}.xlsx")
     data_collection = DataCollection(config, path_output_data)
@@ -76,7 +104,8 @@ def setup_data(
     else:
         data_collection.readin_data_files(data_paths, data_labels)
 
-    data_collection.check()
+    data_collection.check(codebook)
+    data_collection.summarize()
 
     if write_data:
         data_collection.write_output_data()
