@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Tuple
 
 import click
+from tqdm import tqdm
 
 from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
@@ -32,7 +33,7 @@ def main(
     codebook_path: Path,
     config_path: Path,
     name: str,
-    plot_type: str,
+    plot_type: Tuple[str],
     output_format: str,
     clear_cache: bool,
     verbosity: str,
@@ -65,7 +66,7 @@ def main(
         config, codebook_path, write_codebook=True, full_rerun=full_rerun
     )
 
-    _ = setup_data(
+    data_collection = setup_data(
         config,
         codebook,
         data_paths,
@@ -74,38 +75,41 @@ def main(
         full_rerun=full_rerun,
     )
 
-    #
-    # logger.info("Preprocessing data")
-    # global_plotting_datas = {}
-    # for label, d in datas.items():
-    #     global_plotting_datas[label] = process.process_data(d, codebook, ctx)
-    #     if isinstance(global_plotting_datas[label], str):
-    #         logger.error(global_plotting_datas[label])
-    #         return
-    #
-    # # number of question blocks -> number of plots
-    # n_blocks = len(global_plotting_datas[list(global_plotting_datas.keys())[0]])
-    #
-    # if plot_type != "timeline":
-    #     global_plotting_datas = global_plotting_datas[
-    #         list(global_plotting_datas.keys())[0]
-    #     ]
-    #
-    # if plot_type == "bars":
-    #     exec_func = barplot.plot_barplots
-    # elif plot_type == "lines":
-    #     exec_func = lineplot.plot_lineplots
-    # elif plot_type == "histograms":
-    #     exec_func = histogram.plot_histograms
-    # elif plot_type == "timeline":
-    #     exec_func = timeline.plot_timelines
-    # else:
-    #     raise Exception(f"Plot type {plot_type} does not exist.")
-    #
-    # logger.info("Producing plots")
-    # # loop over question blocks and produce one plot for each
-    # for xx in tqdm(range(n_blocks)):
-    #     exec_func(xx, global_plotting_datas, ctx)
+    plot_types = set()
+    for pt in plot_type:
+        if pt == "all":
+            plot_types.add("barplots")
+            plot_types.add("lineplots")
+            plot_types.add("histograms")
+            plot_types.add("timelines")
+        elif pt == "barplots":
+            plot_types.add("barplots")
+        elif pt == "barplots":
+            plot_types.add("lineplots")
+        elif pt == "barplots":
+            plot_types.add("histograms")
+        elif pt == "barplots":
+            plot_types.add("timelines")
+        else:
+            raise ValueError(f"Plot type {pt} is unknown")
+
+    logger.info("Producing plots")
+    for pt in plot_types:
+        if plot_type == "bars":
+            exec_func = barplots.plot_barplots
+        elif plot_type == "lines":
+            exec_func = lineplots.plot_lineplots
+        elif plot_type == "histograms":
+            exec_func = histograms.plot_histograms
+        elif plot_type == "timelines":
+            exec_func = timelines.plot_timelines
+        else:
+            raise Exception(f"Plot type {plot_type} does not exist.")
+
+        logger.info(f"Producing plots of type {pt}")
+        for xx in tqdm.tqdm(range(codebook.codebook.n_blocks)):
+            # NOTE: all logging must write using tqdm.write()
+            exec_func(xx, config, codebook, data_collection)
     logger.info("nice-plots finished without errors :)")
 
 
@@ -150,8 +154,9 @@ def cli():
     "-t",
     "--plot_type",
     required=False,
-    default="bars",
-    type=click.Choice(["bars", "lines", "histograms", "timeline"]),
+    default=["all"],
+    type=click.Choice(["bars", "lines", "histograms", "timelines", "all"]),
+    multiple=True,
     help="Type of plots to produce. If type=timeline expects a list of data_paths and also time_labels",
 )
 @click.option(
@@ -202,7 +207,7 @@ def cli_main(
     codebook: Path,
     config: Path,
     name: str,
-    plot_type: str,
+    plot_type: Tuple[str],
     output_format: str,
     clear_cache: bool,
     verbosity: str,

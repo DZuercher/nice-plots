@@ -16,7 +16,7 @@ data_paths = (Path(example_dir + "example_data.csv"),)
 @pytest.mark.parametrize(
     "output_name, plot_type",
     [
-        (("test_main_barplots", "barplots")),
+        (("test_main_barplots", ("barplots",))),
     ],
 )
 def test_main(output_name: str, plot_type: str) -> None:

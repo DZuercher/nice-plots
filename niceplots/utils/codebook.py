@@ -46,6 +46,7 @@ class CodeBook:
         self.block_id_label = config.data.block_id_label
         self.mapping_label = config.data.mapping_label
         self.missing_label = config.data.missing_label
+        self.n_blocks = None
 
         # read defaults from config
         self.config_defaults: dict = {}
@@ -70,7 +71,7 @@ class CodeBook:
         # Add additional columns based on config
         for name, value in self.config_defaults.items():
             self.codebook[name] = value
-
+        self.n_blocks = self.codebook.block.nunique()
         self.check()
 
     def parse_value_mapping(self, df_in: pd.DataFrame) -> pd.Series:
@@ -106,6 +107,7 @@ class CodeBook:
         )
 
         self.path_codebook = Path(codebook_path)
+        self.n_blocks = self.codebook.block.nunique()
         self.check()
 
     def write_output_codebook(self) -> None:
@@ -133,7 +135,7 @@ class CodeBook:
         ]
         for column in unique_per_block:
             unique_map_counts = self.codebook.groupby("block")[column].nunique()
-            if not unique_map_counts.loc[unique_map_counts.index != -1].max() == 1:
+            if not unique_map_counts.max() == 1:
                 mismatched_blocks = unique_map_counts[unique_map_counts > 1]
                 for block in mismatched_blocks:
                     raise ValueError(
@@ -142,9 +144,22 @@ class CodeBook:
 
     def summarize(self):
         logger.info(f"Got codebook defining {self.codebook.shape[0]} variables.")
-        blocks = self.codebook.block.unique()
-        blocks = blocks[blocks != -1]
-        logger.info(f"Got codebook defining {len(blocks)} blocks.")
+        blocks = self.codebook.block[~self.codebook.block.isna()].unique()
+        logger.info(
+            f"Codebook defines {len(blocks)} blocks. Breakdown of variables into blocks:"
+        )
+        for block in blocks:
+            variables_in_block = ",".join(
+                self.codebook.query(f"block == {block}").variable.to_list()
+            )
+            logger.info(f"Block {block} contains variables: {variables_in_block}")
+        if self.codebook.block.isna().any():
+            variables_without_block = ",".join(
+                self.codebook.variable[self.codebook.block.isna()].to_list()
+            )
+            logger.warning(
+                f"Variables {variables_without_block} are not assigned to any block -> Ignored in plotting."
+            )
 
 
 def setup_codebook(

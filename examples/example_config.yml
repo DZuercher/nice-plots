@@ -10,7 +10,7 @@
 data:
   # Name of the column in the codebook that contains the number identifying to
   # which question block the question belongs.
-  # Questions with -1 are ignored when plotting.
+  # Questions with None are ignored when plotting.
   block_id_label: "Group"
 
   # Name of the column in the codebook that contains the question text.
