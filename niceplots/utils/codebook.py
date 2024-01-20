@@ -77,18 +77,21 @@ class CodeBook:
         mappings_parsed = []
         for i, row in df_in.iterrows():
             try:
-                if row.value_map == "none":
-                    mapping_parsed = row.value_map
+                if row.value_map is None:
+                    mapping_parsed = None
                 else:
                     map_strings = row.value_map.split("\n")
                     m = {}
                     for ma in map_strings:
                         code = int(ma.split("=")[0].strip())
+                        # ignore mapping for no answer code (mostly ill-defined)
                         if code == row["data.no_answer_code"]:
                             continue
                         m[code] = ma.split("=")[1].strip()
+                    # sort by keys
+                    m = dict(sorted(m.items()))
                     mapping_parsed = str(m)
-            except ValueError as error:
+            except BaseException as error:
                 raise ValueError(
                     f"Unable to process code mapping {row.value_map} in Codebook Line {i}"
                 ) from error
@@ -118,14 +121,24 @@ class CodeBook:
                     f"Your codebook does not contain column {col}. But it is required by nice-plots."
                 )
 
-        # assert uniqueness of value map within a block
-        unique_map_counts = self.codebook.groupby("block")["value_map"].nunique()
-        if not unique_map_counts.loc[unique_map_counts.index != -1].max() == 1:
-            mismatched_blocks = unique_map_counts[unique_map_counts > 1]
-            for block in mismatched_blocks:
-                raise ValueError(
-                    f"Code mapping not unique for question block {block}. Found mappings: {self.codebook[self.codebook.block == block].value_map.drop_duplicates()}"
-                )
+        # assert uniqueness of codebook within a block
+        unique_per_block = [
+            "value_map",
+            "plotting.nbins",
+            "plotting.unit",
+            "barplots.text_color",
+            "barplots.color_scheme",
+            "barplots.invert",
+            "lineplots.invert",
+        ]
+        for column in unique_per_block:
+            unique_map_counts = self.codebook.groupby("block")[column].nunique()
+            if not unique_map_counts.loc[unique_map_counts.index != -1].max() == 1:
+                mismatched_blocks = unique_map_counts[unique_map_counts > 1]
+                for block in mismatched_blocks:
+                    raise ValueError(
+                        f"Column {column} not unique for question block {block}. Found values: {self.codebook[self.codebook.block == block][column].drop_duplicates()}"
+                    )
 
     def summarize(self):
         logger.info(f"Got codebook defining {self.codebook.shape[0]} variables.")

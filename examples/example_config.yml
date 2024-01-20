@@ -24,12 +24,7 @@ data:
   # code numbers in the data table to labels.
   # The cells must contain multiple entries separated by newlines.
   # Each entry must follow the format <code value> = <text label>.
-  # The first entry must have <code value> = 1, and subsequent entries count
-  # upwards from there.
-  # <code values> with 0 in the data table correspond to no answer
-  # and will not appear in the plots.
-  # If the codes should be used as labels directly write none instead
-  # of a mapping.
+  # If no mapping is provided (empty) the codes are used directly, separated into <nbins> linearly spaced bins
 
   # Example cell entry:
   # 1 = nie
@@ -37,8 +32,9 @@ data:
   # 3 = immer
   mapping_label: "Value Codes"
 
+  # TODO: Define how these are treated
   # The name of the column in the codebook indicating the missing code
-  # (question not filled out by participant)
+  # (question not filled out by participant).
   missing_label: "Missing Code"
 
   # Code used to identify participants that chose no answer

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 
 from niceplots.utils.codebook import CodeBook
 from niceplots.utils.config import Configuration
@@ -12,36 +13,88 @@ logger = init_logger(__file__)
 
 
 class Data:
-    def __init__(self, df: pd.DataFrame, name: str) -> None:
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        name: str,
+        filters: dict,
+        variables: pd.Series,
+        from_source: bool = False,
+    ) -> None:
         self.name = name
+        self.filters = filters
+        self.variables = variables
         self.data = df.to_frame() if isinstance(df, pd.Series) else df
 
-    def check(self, codebook: CodeBook):
+        if from_source:
+            self.preprocess()
+
+    def preprocess(self):
         # check that all variables that are in the codebook are also in the data
-        if not set(codebook.codebook.variable).issubset(set(self.data.columns)):
-            missing_vars = set(codebook.codebook.variable) - set(self.data.columns)
+        if not set(self.variables).issubset(set(self.data.columns)):
+            missing_vars = set(self.variables) - set(self.data.columns)
             raise ValueError(
                 f"Data Object {self.name}: Did not find {missing_vars} in data, but they are in the codebook."
             )
+        self.data = self.data.loc[:, self.variables.to_list()]
 
+        # add category column
+        if "nice_plots_category" in self.data.columns:
+            raise ValueError(
+                "Your data must not contain a column named: nice_plots_category"
+            )
+
+        self.data["nice_plots_category"] = None
+        for filter_name, filter_string in self.filters.items():
+            try:
+                index_filtered = self.data.query(filter_string).index
+            except BaseException as error:
+                raise ValueError(
+                    f"Unable to apply your filter {filter_string} named {filter_name} to data {self.name}"
+                ) from error
+            self.data.loc[index_filtered, "nice_plots_category"] = filter_name
+
+        # add code
+
+    def check(self, codebook: CodeBook):
         # check that values in each variable agree with the mapping in the codebook
         for _, row in codebook.codebook.iterrows():
-            if not row.value_map == "none":
-                continue
-            mapping = eval(row.value_map)
-            if self.data[row.variable].map(mapping).isna().sum() > 0:
-                raise ValueError(
-                    f"Data Object {self.name}: Could not apply code mapping {mapping} to data for variable {row.variable}. Is your data out of range?"
-                )
+            if row.value_map is None:
+                # require numerical values
+                if not is_numeric_dtype(self.data[row.variable]):
+                    raise ValueError(
+                        f"Data Object {self.name}: No code mapping provided for variable {row.variable} but the data is not numeric!"
+                    )
+            else:
+                mapping = eval(row.value_map)
+                if self.data[row.variable].map(mapping).isna().sum() > 0:
+                    raise ValueError(
+                        f"Data Object {self.name}: Could not apply code mapping {mapping} to data for variable {row.variable}. Is your data out of range?"
+                    )
 
     def summarize(self):
-        logger.info(f"Data Object {self.name}: Data has {self.data.shape[0]} rows.")
+        logger.info(
+            f"Data Object {self.name}: Data has {self.data.shape[0]} rows. They break down in the following categories:"
+        )
+        for filter_name in self.filters.keys():
+            filter_condition = f'nice_plots_category == "{filter_name}"'
+            logger.info(
+                f"\t Category {filter_name}: {self.data.query(filter_condition).nice_plots_category.count()} rows"
+            )
+        if self.data.nice_plots_category.isna().any():
+            logger.warning(
+                f"{self.data.nice_plots_category.isna().sum()} rows are not associated to any category -> Not used in plots."
+            )
 
 
 class DataCollection:
-    def __init__(self, config: Configuration, path_output_data: Path) -> None:
+    def __init__(
+        self, config: Configuration, codebook: CodeBook, path_output_data: Path
+    ) -> None:
         self.delimiter = config.data.delimiter
+        self.filters = config.data.filters
         self.path_data = path_output_data
+        self.variables = codebook.codebook.variable
         self.data_object_names: List = []
 
     def write_output_data(self) -> None:
@@ -57,15 +110,17 @@ class DataCollection:
 
     def readin_data_file(self, path: Path, label: str) -> None:
         df = pd.read_csv(path, sep=self.delimiter)
-        self._add_data_object(df, label)
+        self._add_data_object(df, label, from_source=True)
 
     def readin_niceplots_data_file(self, path: Path) -> None:
         sheets = pd.read_excel(path, sheet_name=None)
         for label, df in sheets.items():
             self._add_data_object(df, label)
 
-    def _add_data_object(self, df: pd.DataFrame, name: str) -> None:
-        setattr(self, name, Data(df, name))
+    def _add_data_object(
+        self, df: pd.DataFrame, name: str, from_source: bool = False
+    ) -> None:
+        setattr(self, name, Data(df, name, self.filters, self.variables, from_source))
         self.data_object_names.append(name)
 
     def check(self, codebook: CodeBook):
@@ -93,7 +148,7 @@ def setup_data(
     logger.info("Initializing nice-plots data.")
 
     path_output_data = Path(f"{config.output_directory}/data_{config.output_name}.xlsx")
-    data_collection = DataCollection(config, path_output_data)
+    data_collection = DataCollection(config, codebook, path_output_data)
 
     # check if there is already a data file in the output directory
     if os.path.exists(path_output_data) and not full_rerun:

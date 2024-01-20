@@ -34,6 +34,17 @@ class DataConfiguration(ConfigBase):
         self.filters: dict = {}
         self.delimiter = ","
 
+    def update(self, config_dict: Dict) -> None:
+        for key, value in config_dict.items():
+            if key == "filters":
+                if "nice_plots_default_group" in value.keys():
+                    raise ValueError(
+                        "Your filters must not contain a category named: nice_plots_default_group"
+                    )
+                if len(value.keys()) == 0:
+                    value = {"nice_plots_default_group": "True"}
+            setattr(self, key, value)
+
 
 class PlottingConfiguration(ConfigBase):
     def __init__(self) -> None:
