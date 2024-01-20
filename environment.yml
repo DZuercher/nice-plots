@@ -9,12 +9,13 @@ dependencies:
   - pytest-cov
   - pytest-xdist # adds distributed tests
   - pip
+  - pip:
+      - openpyxl
   - nb_black
   - yaml
   - pydantic
   - matplotlib-base
   - pandas
-  - openpyxl
   - seaborn
   - click
   - os

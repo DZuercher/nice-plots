@@ -14,7 +14,7 @@ logger = init_logger(__file__)
 class Data:
     def __init__(self, df: pd.DataFrame, name: str) -> None:
         self.name = name
-        self.data = df
+        self.data = df.to_frame() if isinstance(df, pd.Series) else df
 
     def check(self, codebook: CodeBook):
         # check that all variables that are in the codebook are also in the data
@@ -47,7 +47,7 @@ class DataCollection:
     def write_output_data(self) -> None:
         with pd.ExcelWriter(self.path_data) as writer:
             for name in self.data_object_names:
-                getattr(self, name).to_excel(writer, sheet_name=name, index=False)
+                getattr(self, name).data.to_excel(writer, sheet_name=name, index=False)
 
     def readin_data_files(
         self, data_paths: Tuple[Path, ...], data_labels: Tuple[str, ...]
@@ -60,7 +60,7 @@ class DataCollection:
         self._add_data_object(df, label)
 
     def readin_niceplots_data_file(self, path: Path) -> None:
-        sheets = pd.read_excel(path)
+        sheets = pd.read_excel(path, sheet_name=None)
         for label, df in sheets.items():
             self._add_data_object(df, label)
 

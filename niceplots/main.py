@@ -13,12 +13,18 @@ from niceplots.utils.nice_logger import init_logger, set_logger_level
 logger = init_logger(__file__)
 
 
-def check_arguments(data_paths: Tuple[Path], time_labels: Tuple[str]) -> None:
-    if len(time_labels) != len(data_paths):
+def check_arguments(data_paths: Tuple[Path], data_labels: Tuple[str]) -> None:
+    if len(data_labels) != len(data_paths):
         raise Exception(
             "Can only make time series plot if same number "
             "of labels and data sets provided."
         )
+
+    for label in data_labels:
+        if len(label) < 1:
+            raise ValueError(
+                f"All data_labels must have at least one character: {label} is too short."
+            )
 
 
 def main(
@@ -68,22 +74,6 @@ def main(
         full_rerun=full_rerun,
     )
 
-    # # Load data
-    # datas = {}
-    # for path, label in zip(data_paths, time_labels):
-    #     d = parser.load_data(ctx, path, codebook)
-    #     if isinstance(d, str):
-    #         logger.error(d)
-    #         return
-    #     datas[label] = d
-    # logger.info("Loaded data")
-    #
-    # # check the config file
-    # for d in datas.values():
-    #     status = parser.check_config(ctx, codebook, d)
-    #     if len(status) > 0:
-    #         logger.error(status)
-    #         return
     #
     # logger.info("Preprocessing data")
     # global_plotting_datas = {}

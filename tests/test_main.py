@@ -29,7 +29,7 @@ def test_main(output_name: str, plot_type: str) -> None:
         "pdf",
         False,
         "4",
-        ("",),
+        ("data",),
         prefix,
         False,
     )
