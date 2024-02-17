@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from niceplots import lineplot
-from niceplots.utils import utils
 
 LOGGER = logging.getLogger(__name__)
 

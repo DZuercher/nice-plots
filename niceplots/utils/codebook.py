@@ -46,7 +46,7 @@ class CodeBook:
         self.block_id_label = config.data.block_id_label
         self.mapping_label = config.data.mapping_label
         self.missing_label = config.data.missing_label
-        self.n_blocks = None
+        self.blocks = None
 
         # read defaults from config
         self.config_defaults: dict = {}
@@ -71,7 +71,7 @@ class CodeBook:
         # Add additional columns based on config
         for name, value in self.config_defaults.items():
             self.codebook[name] = value
-        self.n_blocks = self.codebook.block.nunique()
+        self.blocks = self.codebook.block.unique()
         self.check()
 
     def parse_value_mapping(self, df_in: pd.DataFrame) -> pd.Series:
@@ -79,7 +79,7 @@ class CodeBook:
         for i, row in df_in.iterrows():
             try:
                 if row.value_map is None:
-                    mapping_parsed = None
+                    mapping_parsed = ""
                 else:
                     map_strings = row.value_map.split("\n")
                     m = {}
@@ -107,7 +107,7 @@ class CodeBook:
         )
 
         self.path_codebook = Path(codebook_path)
-        self.n_blocks = self.codebook.block.nunique()
+        self.blocks = self.codebook.block.unique()
         self.check()
 
     def write_output_codebook(self) -> None:

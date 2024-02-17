@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict
 
 import yaml
+from matplotlib.font_manager import FontProperties
 
 from niceplots.utils.nice_logger import init_logger, set_logger_level
 
@@ -31,15 +32,15 @@ class DataConfiguration(ConfigBase):
         self.mapping_label = "Value Codes"
         self.missing_label = "Missing Code"
         self.no_answer_code = 999
-        self.filters: dict = {}
+        self.groups: dict = {}
         self.delimiter = ","
 
     def update(self, config_dict: Dict) -> None:
         for key, value in config_dict.items():
-            if key == "filters":
+            if key == "groups":
                 if "nice_plots_default_group" in value.keys():
                     raise ValueError(
-                        "Your filters must not contain a category named: nice_plots_default_group"
+                        "Your groups must not contain a group named: nice_plots_default_group"
                     )
                 if len(value.keys()) == 0:
                     value = {"nice_plots_default_group": "True"}
@@ -59,12 +60,50 @@ class PlottingConfiguration(ConfigBase):
 class BarplotsConfiguration(ConfigBase):
     def __init__(self) -> None:
         self.color_scheme = "RdYlGn"
-        self.height = 0.7
-        self.dist = 0.3
-        self.major_dist = 1
         self.text_color = "black"
-        self.padding = 0.3
         self.invert = False
+        self.layout = {
+            "width_question": 1,
+            "width_groups": 1,
+            "width_plot": 3,
+            "width_summary": 0.5,
+            "width_pad": 0.1,
+            "height_question": 2,
+            "height_rel_pad_groups": 0.1,
+            "height_rel_pad_questions": 0.3,
+        }
+        self.font_legend = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+        self.font_questions = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+        self.font_groups = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+        self.font_summary = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+        self.font_plot = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+
+    def make_fonts(self) -> None:
+        self.font_legend = FontProperties(**self.font_legend)
+        self.font_questions = FontProperties(**self.font_questions)
+        self.font_groups = FontProperties(**self.font_groups)
+        self.font_summary = FontProperties(**self.font_summary)
+        self.font_plot = FontProperties(**self.font_plot)
 
 
 class LineplotsConfiguration(ConfigBase):
@@ -166,6 +205,9 @@ class Configuration:
 
         self.print_config()
 
+    def make_fonts(self) -> None:
+        self.barplots.make_fonts()
+
     def write_output_config(self) -> None:
         config_dict = {}
         config_dict["data"] = vars(self.data)
@@ -243,5 +285,7 @@ def setup_config(
     )
     if write_config:
         config.write_output_config()
+
+    config.make_fonts()
     logger.info("Finished setting up nice-plots configuration.")
     return config

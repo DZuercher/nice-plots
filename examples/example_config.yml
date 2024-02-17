@@ -47,7 +47,7 @@ data:
   # and each filter follows the format: 'group name' : 'varibale operator value'
   # NOTE: The whitespaces matter!
   # Example:
-  filters:
+  groups:
     Group 1: "VAR02 == 1"
     Others: "(VAR02 == 2) | (VAR02 == 4)"
 

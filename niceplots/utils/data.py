@@ -17,13 +17,15 @@ class Data:
         self,
         df: pd.DataFrame,
         name: str,
-        filters: dict,
+        groups: dict,
         variables: pd.Series,
+        no_answer_code: int,
         from_source: bool = False,
     ) -> None:
         self.name = name
-        self.filters = filters
+        self.groups = groups
         self.variables = variables
+        self.no_answer_code = no_answer_code
         self.data = df.to_frame() if isinstance(df, pd.Series) else df
 
         if from_source:
@@ -39,26 +41,29 @@ class Data:
         self.data = self.data.loc[:, self.variables.to_list()]
 
         # add category column
-        if "nice_plots_category" in self.data.columns:
+        if "nice_plots_group" in self.data.columns:
             raise ValueError(
-                "Your data must not contain a column named: nice_plots_category"
+                "Your data must not contain a column named: nice_plots_group"
             )
 
-        self.data["nice_plots_category"] = None
-        for filter_name, filter_string in self.filters.items():
+        self.data["nice_plots_group"] = None
+        for group_name, group_string in self.groups.items():
             try:
-                index_filtered = self.data.query(filter_string).index
+                index_grouped = self.data.query(group_string).index
             except BaseException as error:
                 raise ValueError(
-                    f"Unable to apply your filter {filter_string} named {filter_name} to data {self.name}"
+                    f"Unable to apply your group filter {group_string} named {group_name} to data {self.name}"
                 ) from error
-            self.data.loc[index_filtered, "nice_plots_category"] = filter_name
-
-        # add code
+            self.data.loc[index_grouped, "nice_plots_group"] = group_name
 
     def check(self, codebook: CodeBook):
         # check that values in each variable agree with the mapping in the codebook
         for _, row in codebook.codebook.iterrows():
+            # TODO: at the moment restrict to numerical values
+            if not is_numeric_dtype(self.data[row.variable]):
+                raise ValueError(
+                    f"Data Object {self.name}: Data is not numeric for variable {row.variable}. Nice-plots requires numberic data!"
+                )
             if row.value_map is None:
                 # require numerical values
                 if not is_numeric_dtype(self.data[row.variable]):
@@ -67,7 +72,11 @@ class Data:
                     )
             else:
                 mapping = eval(row.value_map)
-                if self.data[row.variable].map(mapping).isna().sum() > 0:
+                data_test = self.data[row.variable]
+                data_test = data_test[
+                    ~(data_test.isna() | (data_test == self.no_answer_code))
+                ]
+                if data_test.map(mapping).isna().sum() > 0:
                     raise ValueError(
                         f"Data Object {self.name}: Could not apply code mapping {mapping} to data for variable {row.variable}. Is your data out of range?"
                     )
@@ -76,14 +85,14 @@ class Data:
         logger.info(
             f"Data Object {self.name}: Data has {self.data.shape[0]} rows. They break down in the following categories:"
         )
-        for filter_name in self.filters.keys():
-            filter_condition = f'nice_plots_category == "{filter_name}"'
+        for group_name in self.groups.keys():
+            filter_condition = f'nice_plots_group == "{group_name}"'
             logger.info(
-                f"\t Category {filter_name}: {self.data.query(filter_condition).nice_plots_category.count()} rows"
+                f"\t Group {group_name}: {self.data.query(filter_condition).nice_plots_group.count()} rows"
             )
-        if self.data.nice_plots_category.isna().any():
+        if self.data.nice_plots_group.isna().any():
             logger.warning(
-                f"{self.data.nice_plots_category.isna().sum()} rows are not associated to any category -> Not used in plots."
+                f"{self.data.nice_plots_group.isna().sum()} rows are not associated to any group -> Not used in plots."
             )
 
 
@@ -92,7 +101,8 @@ class DataCollection:
         self, config: Configuration, codebook: CodeBook, path_output_data: Path
     ) -> None:
         self.delimiter = config.data.delimiter
-        self.filters = config.data.filters
+        self.groups = config.data.groups
+        self.no_answer_code = config.data.no_answer_code
         self.path_data = path_output_data
         self.variables = codebook.codebook.variable
         self.data_object_names: List = []
@@ -120,7 +130,13 @@ class DataCollection:
     def _add_data_object(
         self, df: pd.DataFrame, name: str, from_source: bool = False
     ) -> None:
-        setattr(self, name, Data(df, name, self.filters, self.variables, from_source))
+        setattr(
+            self,
+            name,
+            Data(
+                df, name, self.groups, self.variables, self.no_answer_code, from_source
+            ),
+        )
         self.data_object_names.append(name)
 
     def check(self, codebook: CodeBook):

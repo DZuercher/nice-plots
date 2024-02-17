@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Tuple
 
 import click
-from tqdm import tqdm
 
+import niceplots.barplot as barplots
 from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
 from niceplots.utils.data import setup_data
@@ -97,19 +97,17 @@ def main(
     for pt in plot_types:
         if plot_type == "bars":
             exec_func = barplots.plot_barplots
-        elif plot_type == "lines":
-            exec_func = lineplots.plot_lineplots
-        elif plot_type == "histograms":
-            exec_func = histograms.plot_histograms
-        elif plot_type == "timelines":
-            exec_func = timelines.plot_timelines
-        else:
-            raise Exception(f"Plot type {plot_type} does not exist.")
+        # elif plot_type == "lines":
+        #     exec_func = lineplots.plot_lineplots
+        # elif plot_type == "histograms":
+        #     exec_func = histograms.plot_histograms
+        # elif plot_type == "timelines":
+        #     exec_func = timelines.plot_timelines
+        # else:
+        #     raise Exception(f"Plot type {plot_type} does not exist.")
 
         logger.info(f"Producing plots of type {pt}")
-        for xx in tqdm.tqdm(range(codebook.codebook.n_blocks)):
-            # NOTE: all logging must write using tqdm.write()
-            exec_func(xx, config, codebook, data_collection)
+        exec_func(config, codebook, data_collection)
     logger.info("nice-plots finished without errors :)")
 
 
