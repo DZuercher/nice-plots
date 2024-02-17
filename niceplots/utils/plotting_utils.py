@@ -1,16 +1,63 @@
 # Authors: Dominik Zuercher, Valeria Glauser
-import logging
 import os
 
-import hyphen
 import matplotlib.pyplot as plt
 import numpy as np
-from hyphen.textwrap2 import fill
+from matplotlib.text import Text
+from matplotlib.figure import Figure
+from niceplots.utils.nice_logger import init_logger, set_logger_level
 
-LOGGER = logging.getLogger(__name__)
+logger = init_logger(__file__)
 
-lang = "de_DE"
-hyp = hyphen.Hyphenator(lang)
+class WrapText(Text):
+    """
+    Wrapper around matplotlib Text Artist.
+    Automatically wraps text to a certain width.
+    :param width: Maximally allowed width of the text
+    :param width_units: either 'pixels', 'inches' or 'figure'.
+    If 'figure' or 'inches' then figure needs to be passed
+    :param figure: Figure object
+    """
+    def __init__(self,
+                 x=0,
+                 y=0,
+                 text='',
+                 width=0,
+                 width_units='pixels',
+                 figure=None,
+                 **kwargs):
+
+        super(WrapText, self).__init__(
+            x=x, y=y, text=text,
+            wrap=True,
+            **kwargs)
+
+        if width_units == 'pixels':
+            self.width = width  # in pixels
+        elif width_units == 'figure':
+            if not isinstance(figure, Figure):
+                raise ValueError("If width_units=figure need to pass a valid Figure object.")
+            self.width = width_to_pixels_figure(width, figure)
+        elif width_units == 'inches':
+            if not isinstance(figure, Figure):
+                raise ValueError("If width_units=inches need to pass a valid Figure object.")
+            self.width = inches_to_pixels(width, 0, figure)[0]
+        else:
+            raise ValueError(f"width_unit {width_units} not known")
+    def _get_wrap_line_width(self):
+        return self.width
+
+def width_to_pixels_figure(width, figure):
+    # convert width in figure units to pixels
+    return figure.transFigure.transform((0.0, width))[1]
+
+
+def inches_to_pixels(width, height, figure):
+    in_figure_units = figure.dpi_scale_trans.inverted().transform((width, height))
+    return figure.transFigure.transform(in_figure_units)
+
+###################### OLD #####################
+
 
 
 def get_render_size(object, ctx, x_size=True):

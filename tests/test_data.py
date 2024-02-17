@@ -1,21 +1,26 @@
 import os
-import shutil
 from pathlib import Path
+import pytest
 
 from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
 from niceplots.utils.data import setup_data
+from niceplots.utils.test_utils import get_test_inputs
 
 example_dir = os.path.dirname(__file__) + "/../examples/"
 config_path = Path(example_dir + "example_config.yml")
 codebook_path = Path(example_dir + "example_codebook.csv")
 prefix = Path(example_dir)
 
-
-def test_single_data():
+@pytest.mark.parametrize('get_test_inputs', [['test_single_data']], indirect=["get_test_inputs"])
+def test_single_data(get_test_inputs):
+    name = get_test_inputs[0]
+    prefix = get_test_inputs[1]
+    config_path = get_test_inputs[2]
+    codebook_path = get_test_inputs[3]
+    data_path = get_test_inputs[4]
     data_labels = ("data",)
-    name = "test_single_data"
-    data_paths = (Path(example_dir + "example_data.csv"),)
+    data_paths = (data_path,)
 
     config = setup_config(prefix, config_path, name, "4", "pdf", False)
     codebook = setup_codebook(config, codebook_path)
@@ -23,17 +28,19 @@ def test_single_data():
 
     assert config.data_file == data.path_data
 
-    # cleanup
-    shutil.rmtree(f"{prefix}/{name}")
+@pytest.mark.parametrize('get_test_inputs', [['test_multi_data']], indirect=["get_test_inputs"])
+def test_multi_data(get_test_inputs):
+    name = get_test_inputs[0]
+    prefix = get_test_inputs[1]
+    config_path = get_test_inputs[2]
+    codebook_path = get_test_inputs[3]
+    data_path = get_test_inputs[4]
 
-
-def test_multi_data():
     data_labels = ("data1", "data2", "data3")
-    name = "test_multi_data"
     data_paths = (
-        Path(example_dir + "example_data.csv"),
-        Path(example_dir + "example_data.csv"),
-        Path(example_dir + "example_data.csv"),
+        data_path,
+        data_path,
+        data_path,
     )
 
     config = setup_config(prefix, config_path, name, "4", "pdf", False)
@@ -41,6 +48,3 @@ def test_multi_data():
     data = setup_data(config, codebook, data_paths, data_labels)
 
     assert config.data_file == data.path_data
-
-    # cleanup
-    shutil.rmtree(f"{prefix}/{name}")
