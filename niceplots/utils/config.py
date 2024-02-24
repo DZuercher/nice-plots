@@ -51,8 +51,6 @@ class PlottingConfiguration(ConfigBase):
     def __init__(self) -> None:
         self.plot_width = 8
         self.format = "pdf"
-        self.fontsize = 15
-        self.fontsize_stats = 12
         self.nbins = 5
         self.unit = ""
 
@@ -63,19 +61,19 @@ class BarplotsConfiguration(ConfigBase):
         self.text_color = "black"
         self.invert = False
         self.layout = {
-            "width_question": 1,
+            "width_question": 2,
             "width_groups": 1,
             "width_plot": 3,
-            "width_summary": 0.5,
-            "width_pad": 0.1,
-            "height_question": 2,
+            "width_summary": 3,
+            "width_pad": 0.2,
+            "height_question": 1.5,
             "height_rel_pad_groups": 0.1,
             "height_rel_pad_questions": 0.3,
         }
         self.font_legend = {
             "family": "sans-serif",
             "style": "normal",
-            "size": 12,  # in points
+            "size": 8,  # in points
         }
         self.font_questions = {
             "family": "sans-serif",
@@ -90,7 +88,7 @@ class BarplotsConfiguration(ConfigBase):
         self.font_summary = {
             "family": "sans-serif",
             "style": "normal",
-            "size": 12,  # in points
+            "size": 8,  # in points
         }
         self.font_plot = {
             "family": "sans-serif",

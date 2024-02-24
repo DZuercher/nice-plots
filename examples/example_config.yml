@@ -5,7 +5,6 @@
 # This example config shows all the available options as well as their default values
 # When writing your own config you do not need to specify all the options. For options that
 # you do not use the default values are used.
-# TODO: Actually update the values below to the default values
 
 data:
   # Name of the column in the codebook that contains the number identifying to
@@ -61,12 +60,6 @@ plotting:
   # output format
   format: pdf
 
-  # Global fontsize in plots
-  fontsize: 15
-
-  # fontsize for stats and legend
-  fontsize_stats: 12
-
   # Number of bins used by default to create linear binning scheme.
   # Only used if mapping is none
   nbins: 5
@@ -76,6 +69,60 @@ plotting:
 
 # BARPLOTS OPTIONS
 ############################################################
+
+#    For each question and group plot a horizontal bar. Each segment of the bar corresponds one answer and its width
+#    represents the relative amount of people that chose this answer.
+#
+#    For each question a short statistics summary is added.
+#
+#    Y-Layout: The only physical size input for the vertical direction is the height of one question barplot unit
+#    (height_question, in inches).
+#
+#
+#    The physical height of the plot is calculated from the number of questions, groups,
+#    relative spacings and the desired physical size of the bars.
+#
+#    For the legend at the top 2 * height_question is allocated.
+#
+#                       ---
+#                        |       _
+#                        |       | Bar for group 1, Question 1
+#                        |       -
+#    height_question     |      height_rel_pad_groups (relative spacing between bars within a question)
+#                        |       _
+#                        |       |  Bar for group 2, Question 1
+#                        |       -
+#                        |
+#                       ---     height_rel_pad_questions (relative spacing between bars between different questions)
+#                        |       _
+#                        |       | Bar for group 1, Question 2
+#                        |       -
+#    height_question     |      height_rel_pad_groups (relative spacing between bars within a question)
+#                        |       _
+#                        |       |  Bar for group 2, Question 2
+#                        |       -
+#                        |
+#                       ---
+#
+#    X-Layout: For each component of the barplot (question label, group label, etc.) the physical width is
+#    required as an input in inches. The total physical width is the sum of all components.
+#
+#    Text is wrapped automatically to the correct width.
+#
+#    Note: If the fontsize is very large and the text is very long it can happen that the wrapping does not
+#    work properly (overlapping or many lines).
+#    In that case you should increase the physical width of the plot components.
+#
+#      width_question   width_pad  width_groups  width_pad    width_plot   width_pad  width_summary
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+
 barplots:
   # If True the label categories are plotted from largest to smallest.
   invert: False
@@ -83,21 +130,43 @@ barplots:
   # default colorscheme
   color_scheme: "RdYlGn"
 
-  # Height of the bars in the plots
-  height: 0.7 # in inches
-
-  # Distance between bars for different categories within a question
-  # and also distance to legend
-  dist: 0.3 # in inches
-
-  # Distance between bars for different questions
-  major_dist: 1 # in inches
-
   # Color of the numbers in the bars
   text_color: "black"
 
-  # Distance between labels and question text.
-  padding: 0.3 # in inches
+  layout:
+    width_question: 2
+    width_groups: 1
+    width_plot: 3
+    width_summary: 3
+    width_pad: 0.2
+    height_question: 1.5
+    height_rel_pad_groups: 0.1
+    height_rel_pad_questions: 0.3
+
+  font_legend:
+    family: sans_serif
+    style: normal
+    size: 8
+
+  font_questions:
+    family: sans_serif
+    style: normal
+    size: 12
+
+  font_groups:
+    family: sans_serif
+    style: normal
+    size: 10
+
+  font_summary:
+    family: sans_serif
+    style: normal
+    size: 8
+
+  font_plot:
+    family: sans_serif
+    style: normal
+    size: 8
 
 # LINEPLOTS OPTIONS
 ############################################################
