@@ -1,12 +1,14 @@
 import pytest
+
+from niceplots.plotting import barplot
 from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
 from niceplots.utils.data import setup_data
-from niceplots.plotting import barplot
-from niceplots.utils.test_utils import get_test_inputs
 
 
-@pytest.mark.parametrize('get_test_inputs', [['test_barplots']], indirect=["get_test_inputs"])
+@pytest.mark.parametrize(
+    "get_test_inputs", [["test_barplots"]], indirect=["get_test_inputs"]
+)
 def test_barplots(get_test_inputs):
     data_labels = ("data",)
     name = get_test_inputs[0]
@@ -22,5 +24,3 @@ def test_barplots(get_test_inputs):
     data = setup_data(config, codebook, data_paths, data_labels)
 
     barplot.plot_barplots(config, codebook, data)
-    # assert config.data_file == data.path_data
-

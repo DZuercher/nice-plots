@@ -3,8 +3,9 @@
 ###########################################
 
 # This example config shows all the available options as well as their default values
-# When writing your own config you do not need to specify all the options. For options that
-# you do not use the default values are used.
+# When writing your own config you do not need to specify all the options, but only those
+# for which you wish to deviate from the default values.
+# NOTE: If you wish to change the actual default values you need to change the values in utils/config.py
 
 data:
   # Name of the column in the codebook that contains the number identifying to
@@ -31,20 +32,19 @@ data:
   # 3 = immer
   mapping_label: "Value Codes"
 
-  # TODO: Define how these are treated
   # The name of the column in the codebook indicating the missing code
   # (question not filled out by participant).
+  # These data entries are completely ignored when plotting.
   missing_label: "Missing Code"
 
-  # Code used to identify participants that chose no answer
+  # Code used to identify participants that chose no answer.
+  # These data entries are not used when plotting but they show up in the summary stats
+  # of some plotting types (e.g. barplots)
   no_answer_code: 999
 
-  # Optional filter functions. Allows to split data into multiple categories
-  # based on the values of certain variables. The different categories are compared
+  # Optional filter functions. Allows to split data into multiple groups
+  # based on the values of certain variables. The different groups are compared
   # against each others in the plots.
-  # The syntax is: {filter1, filter2, ...}
-  # and each filter follows the format: 'group name' : 'varibale operator value'
-  # NOTE: The whitespaces matter!
   # Example:
   groups:
     Group 1: "VAR02 == 1"
@@ -54,9 +54,6 @@ data:
   delimiter: ","
 
 plotting:
-  # Total plot width (careful, changing this will change the aspect ratio!)
-  plot_width: 8 # in inches
-
   # output format
   format: pdf
 
@@ -69,7 +66,7 @@ plotting:
 
 # BARPLOTS OPTIONS
 ############################################################
-
+#    BARPLOTS:
 #    For each question and group plot a horizontal bar. Each segment of the bar corresponds one answer and its width
 #    represents the relative amount of people that chose this answer.
 #
@@ -108,10 +105,6 @@ plotting:
 #    required as an input in inches. The total physical width is the sum of all components.
 #
 #    Text is wrapped automatically to the correct width.
-#
-#    Note: If the fontsize is very large and the text is very long it can happen that the wrapping does not
-#    work properly (overlapping or many lines).
-#    In that case you should increase the physical width of the plot components.
 #
 #      width_question   width_pad  width_groups  width_pad    width_plot   width_pad  width_summary
 #    |                     | |                     | |                       |  |                    |
@@ -182,17 +175,28 @@ lineplots:
     - "C3"
     - "C4"
 
-  # Height of the line plots
-  height: 0.7 # in inches
+  layout:
+    width_question: 2
+    width_plot: 3
+    width_labels: 1.0
+    width_pad: 0.2
+    height_question: 1.0
+    rel_edge_line_height: 0.5
 
-  # Distance between lines plots
-  dist: 0.3 # in inches
+  font_legend:
+    family: sans_serif
+    style: normal
+    size: 8
 
-  # Distance between line plots and the questions at the side
-  padding: 3.0 # in inches
+  font_questions:
+    family: sans_serif
+    style: normal
+    size: 12
 
-  # Distance between line plots and the max and min labels at the side
-  label_padding: 0.2 # in inches
+  font_labels:
+    family: sans_serif
+    style: normal
+    size: 12
 
 # HISTOGRAMS
 ############################################################

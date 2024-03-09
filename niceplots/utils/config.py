@@ -49,7 +49,6 @@ class DataConfiguration(ConfigBase):
 
 class PlottingConfiguration(ConfigBase):
     def __init__(self) -> None:
-        self.plot_width = 8
         self.format = "pdf"
         self.nbins = 5
         self.unit = ""
@@ -107,11 +106,30 @@ class BarplotsConfiguration(ConfigBase):
 class LineplotsConfiguration(ConfigBase):
     def __init__(self) -> None:
         self.colors = ["C0", "C1", "C2", "C3", "C4"]
-        self.height = 0.7
-        self.dist = 0.3
-        self.padding = 3.0
-        self.label_padding = 0.2
         self.invert = False
+        self.layout = {
+            "width_question": 2,
+            "width_plot": 3.0,
+            "width_pad": 0.2,
+            "width_labels": 1.0,
+            "height_question": 1.0,
+            "rel_edge_line_height": 0.5,
+        }
+        self.font_legend = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+        self.font_questions = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+        self.font_labels = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
 
 
 class HistogramsConfiguration(ConfigBase):

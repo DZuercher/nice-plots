@@ -79,10 +79,6 @@ def plot_barplot(
 
     Text is wrapped automatically to the correct width.
 
-    Note: If the fontsize is very large and the text is very long it can happen that the wrapping does not
-    work properly (overlapping or many lines).
-    In that case you should increase the physical width of the plot components.
-
       width_question   width_pad  width_groups  width_pad    width_plot   width_pad  width_summary
     |                     | |                     | |                       |  |                    |
     |                     | |                     | |                       |  |                    |
@@ -137,7 +133,7 @@ def plot_barplot(
 
     # save plot
     fig.savefig(
-        f"{config.output_directory}/{config.output_name}_{block}.{config.plotting.format}",
+        f"{config.output_directory}/{config.output_name}_{int(block)}.{config.plotting.format}",
         transparent=False,
         bbox_inches="tight",
     )
@@ -248,21 +244,6 @@ def add_question_labels(
             verticalalignment="center",
             fontproperties=config.barplots.font_questions,
             x_units="inches",
-            y_units="figure",
-            width_units="inches",
-            width=config.barplots.layout["width_question"],
-            figure=fig,
-        )
-        fig.add_artist(question_label)
-
-        question_label = WrapText(
-            x=200,
-            y=center_position_question,
-            text="|",
-            horizontalalignment="left",
-            verticalalignment="center",
-            fontproperties=config.barplots.font_questions,
-            x_units="display",
             y_units="figure",
             width_units="inches",
             width=config.barplots.layout["width_question"],
@@ -437,7 +418,7 @@ def get_histograms(
         for id_v in range(n_variables):
             code = codebook.iloc[id_v]
             variable = code["variable"]
-            d = data[variable]
+            d = data.data[variable]
             # drop nans
             d = d[~d.isna()]
             # drop missing answers
@@ -446,11 +427,11 @@ def get_histograms(
             max_value = max(d.max(), max_value)
 
     if value_map is None:
-        # no mapping provided (assume numeric values
+        # no mapping provided (assume numeric values)
         bin_edges = np.linspace(min_value, max_value, config.plotting.nbins + 1)
     else:
-        bin_edges = np.asarray(list(value_map.keys()))
-    bin_edges = np.append(bin_edges, bin_edges[-1] + 1) - 0.5
+        bin_centers = np.asarray(list(value_map.keys()))
+        bin_edges = np.append(bin_centers, bin_centers[-1] + 1) - 0.5
 
     histograms = []
     for id_v in range(n_variables):
