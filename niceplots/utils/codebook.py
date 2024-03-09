@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from niceplots.utils.config import Configuration
@@ -46,7 +47,7 @@ class CodeBook:
         self.block_id_label = config.data.block_id_label
         self.mapping_label = config.data.mapping_label
         self.missing_label = config.data.missing_label
-        self.blocks = None
+        self.blocks = np.array([])
 
         # read defaults from config
         self.config_defaults: dict = {}

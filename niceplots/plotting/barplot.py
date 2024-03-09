@@ -21,6 +21,8 @@ logger = init_logger(__file__)
 
 WIDTH_COLORBAR_REL = 0.5
 HEIGHT_COLORBAR_REL = 0.2
+# add units for legend (increase if legend is too large)
+N_UNITS_LEGEND = 2
 
 
 def plot_barplots(
@@ -107,10 +109,7 @@ def plot_barplot(
     color_scheme = codebook_block.iloc[0]["barplots.color_scheme"]
     invert = codebook_block.iloc[0]["barplots.invert"]
 
-    # add units for legend (increase if legend is too large)
-    n_units_legend = 2
-
-    fig, axes = get_layout(config, n_variables, n_units_legend)
+    fig, axes = get_layout(config, n_variables, N_UNITS_LEGEND)
     geometry = get_geometry(config, groups)
 
     histograms, min_value, max_value = get_histograms(
@@ -121,7 +120,7 @@ def plot_barplot(
     add_bars(
         n_variables, axes, config, groups, geometry, histograms, colors, text_color
     )
-    add_question_labels(fig, config, codebook_block, n_variables, n_units_legend)
+    add_question_labels(fig, config, codebook_block, n_variables, N_UNITS_LEGEND)
     add_group_labels(fig, axes, groups, geometry, config)
     add_question_summaries(fig, config, data, codebook_block, axes, groups, geometry)
     add_legend(
@@ -133,7 +132,7 @@ def plot_barplot(
         min_value,
         max_value,
         n_variables,
-        n_units_legend,
+        N_UNITS_LEGEND,
     )
 
     # save plot
