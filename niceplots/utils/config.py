@@ -220,7 +220,7 @@ class Configuration:
             self.barplots.update(config_dict["barplots"])
             self.lineplots.update(config_dict["lineplots"])
             self.histograms.update(config_dict["histograms"])
-            self.timelines.update(config_dict["timelines"])
+            # self.timelines.update(config_dict["timelines"])
 
             logger.info(
                 f"Initializing configuration instance using configuration file in {config_path}"

@@ -1,11 +1,11 @@
-import shutil
 import pytest
-from niceplots.utils.test_utils import get_test_inputs
 
 from niceplots.utils.config import setup_config
 
 
-@pytest.mark.parametrize('get_test_inputs', [['test_config']], indirect=["get_test_inputs"])
+@pytest.mark.parametrize(
+    "get_test_inputs", [["test_config"]], indirect=["get_test_inputs"]
+)
 def test_config(get_test_inputs):
     name = get_test_inputs[0]
     prefix = get_test_inputs[1]

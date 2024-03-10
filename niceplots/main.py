@@ -5,7 +5,7 @@ from typing import Tuple
 
 import click
 
-import niceplots.barplot as barplots
+from niceplots.plotting import barplot, histogram, lineplot
 from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
 from niceplots.utils.data import setup_data
@@ -81,30 +81,30 @@ def main(
             plot_types.add("barplots")
             plot_types.add("lineplots")
             plot_types.add("histograms")
-            plot_types.add("timelines")
+            # plot_types.add("timelines")
         elif pt == "barplots":
             plot_types.add("barplots")
-        elif pt == "barplots":
+        elif pt == "lineplots":
             plot_types.add("lineplots")
-        elif pt == "barplots":
+        elif pt == "histograms":
             plot_types.add("histograms")
-        elif pt == "barplots":
+        elif pt == "timelines":
             plot_types.add("timelines")
         else:
             raise ValueError(f"Plot type {pt} is unknown")
 
     logger.info("Producing plots")
     for pt in plot_types:
-        if plot_type == "bars":
-            exec_func = barplots.plot_barplots
-        # elif plot_type == "lines":
-        #     exec_func = lineplots.plot_lineplots
-        # elif plot_type == "histograms":
-        #     exec_func = histograms.plot_histograms
-        # elif plot_type == "timelines":
-        #     exec_func = timelines.plot_timelines
-        # else:
-        #     raise Exception(f"Plot type {plot_type} does not exist.")
+        if pt == "barplots":
+            exec_func = barplot.plot_barplots
+        elif pt == "lineplots":
+            exec_func = lineplot.plot_lineplots
+        elif pt == "histograms":
+            exec_func = histogram.plot_histograms
+        elif pt == "timelines":
+            raise NotImplementedError("Timelines is currently not implemented.")
+        else:
+            raise Exception(f"Plot type {pt} does not exist.")
 
         logger.info(f"Producing plots of type {pt}")
         exec_func(config, codebook, data_collection)

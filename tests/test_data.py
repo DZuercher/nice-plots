@@ -1,18 +1,13 @@
-import os
-from pathlib import Path
 import pytest
 
 from niceplots.utils.codebook import setup_codebook
 from niceplots.utils.config import setup_config
 from niceplots.utils.data import setup_data
-from niceplots.utils.test_utils import get_test_inputs
 
-example_dir = os.path.dirname(__file__) + "/../examples/"
-config_path = Path(example_dir + "example_config.yml")
-codebook_path = Path(example_dir + "example_codebook.csv")
-prefix = Path(example_dir)
 
-@pytest.mark.parametrize('get_test_inputs', [['test_single_data']], indirect=["get_test_inputs"])
+@pytest.mark.parametrize(
+    "get_test_inputs", [["test_single_data"]], indirect=["get_test_inputs"]
+)
 def test_single_data(get_test_inputs):
     name = get_test_inputs[0]
     prefix = get_test_inputs[1]
@@ -28,7 +23,10 @@ def test_single_data(get_test_inputs):
 
     assert config.data_file == data.path_data
 
-@pytest.mark.parametrize('get_test_inputs', [['test_multi_data']], indirect=["get_test_inputs"])
+
+@pytest.mark.parametrize(
+    "get_test_inputs", [["test_multi_data"]], indirect=["get_test_inputs"]
+)
 def test_multi_data(get_test_inputs):
     name = get_test_inputs[0]
     prefix = get_test_inputs[1]
