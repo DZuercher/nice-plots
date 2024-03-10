@@ -1,37 +1,26 @@
-from niceplots import parser
-from niceplots import process
-from niceplots import histogram
-import os
-import pathlib
-import shutil
+import pytest
 
-example_dir = os.path.dirname(__file__) + '/../examples/'
-config_path = example_dir + 'example_config.yml'
-codebook_path = example_dir + 'example_codebook.csv'
-data_path = example_dir + 'example_data.csv'
+from niceplots.plotting import histogram
+from niceplots.utils.codebook import setup_codebook
+from niceplots.utils.config import setup_config
+from niceplots.utils.data import setup_data
 
 
-def test_histograms():
-    exec_func = getattr(histogram, 'plot_histograms')
+@pytest.mark.parametrize(
+    "get_test_inputs", [["test_histograms"]], indirect=["get_test_inputs"]
+)
+def test_histograms(get_test_inputs):
+    data_labels = ("data",)
+    name = get_test_inputs[0]
+    prefix = get_test_inputs[1]
+    config_path = get_test_inputs[2]
+    codebook_path = get_test_inputs[3]
+    data_path = get_test_inputs[4]
 
-    output_name = 'histograms'
+    data_paths = (data_path,)
 
-    # create cache directory
-    cache_directory = os.path.expanduser("~/.cache/nice-plots")
-    pathlib.Path(cache_directory).mkdir(parents=True, exist_ok=True)
+    config = setup_config(prefix, config_path, name, "4", "pdf", False)
+    codebook = setup_codebook(config, codebook_path)
+    data = setup_data(config, codebook, data_paths, data_labels)
 
-    output_directory = os.path.dirname(__file__) \
-        + '/../examples/' + output_name
-    pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
-
-    ctx = parser.load_config(config_path, output_directory, output_name)
-    ctx['format'] = 'png'
-    codebook = parser.load_codebook(ctx, codebook_path)
-    data = parser.load_data(ctx, data_path, codebook)
-
-    global_plotting_data = process.process_data(data, codebook, ctx)
-
-    for xx, plotting_data in enumerate(global_plotting_data):
-        exec_func(xx, global_plotting_data, ctx)
-
-        # shutil.rmtree(output_directory)
+    histogram.plot_histograms(config, codebook, data)

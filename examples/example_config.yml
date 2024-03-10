@@ -66,7 +66,6 @@ plotting:
 
 # BARPLOTS OPTIONS
 ############################################################
-#    BARPLOTS:
 #    For each question and group plot a horizontal bar. Each segment of the bar corresponds one answer and its width
 #    represents the relative amount of people that chose this answer.
 #
@@ -163,6 +162,42 @@ barplots:
 
 # LINEPLOTS OPTIONS
 ############################################################
+#    For each question a linegrid is plotted. The mean of each group is indicated by a cross.
+#
+#    Y-Layout: The only physical size input for the vertical direction is the height of one question lineplot unit
+#    (height_question, in inches). The spacing between questions is controlled by rel_edge_line_height.
+#    Concretely, the parameter controls the height of the vertical bars
+#    (1 = bars will just touch each other, 0= no vertical bars).
+#
+#    The physical height of the plot is calculated from the number of questions, groups,
+#    relative spacings and the desired physical size of the bars.
+#
+#    For the legend at the top 2 * height_question is allocated.
+#
+#                       ---
+#                        |       _
+#    height_question     |       | Linegrid Question 1
+#                        |       -
+#                       ---     rel_edge_line_height (relative spacing between linegrids of different questions)
+#                        |       _
+#    height_question     |       | Linegrid Question 2
+#                        |       -
+#                       ---
+#
+#    X-Layout: For each component of the lineplot (question label, edge label, etc.) the physical width is
+#    required as an input in inches. The total physical width is the sum of all components.
+#
+#    Text is wrapped automatically to the correct width.
+#
+#      width_question   width_pad  width_labels  width_pad    width_plot   width_pad  width_labels
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
+#    |                     | |                     | |                       |  |                    |
 lineplots:
   # If True the label categories are plotted from largest to smallest.
   invert: False
@@ -198,21 +233,52 @@ lineplots:
     style: normal
     size: 12
 
-# HISTOGRAMS
+# HISTOGRAM OPTIONS
 ############################################################
+#    If a question block contains only a single question plot a bar in a histogram for each answer (per group).
+#    If a question block contains multiple questions with 2 possible answers, interpret as binary (1=Yes, 0=No) and
+#    plot a bar in a histogram for each question (per group).
+#
+#    A summary of the total number of participants that answered (n) and the number of participants that chose no answer (E)
+#    is provided.
+#
+#    Y-Layout: The only physical size input for the vertical direction is the height of a single bar (height_bar, in inches).
+#    Additionally, height_rel_pad_questions controls the relative spacing between group bar bundles
+#
+#    The physical height of the plot is calculated from the number of questions, groups,
+#    relative spacings and the desired physical size of the bars.
+#
+#                       ---
+#                        |       _
+#                        |       | Bar for group 1, Question 1
+#                        |       -
+#                        |       |  Bar for group 2, Question 1
+#                        |       -
+#                        |
+#                        |         height_rel_pad_questions (relative spacing between bars between different questions)
+#                        |
+#                        |       _
+#                        |       | Bar for group 1, Question 2
+#                        |       -
+#                        |       |  Bar for group 2, Question 2
+#                        |       -
+#                        |
+#                       ---
+#
+#    X-Layout: For each component of the histogram the physical width is
+#    required as an input in inches. The total physical width is the sum of all components.
+#    Text is wrapped automatically to the correct width.
+#
+#        width_labels    width_pad    width_plot
+#    |                     | |                       |
+#    |                     | |                       |
+#    |                     | |                       |
+#    |                     | |                       |
+#    |                     | |                       |
+#    |                     | |                       |
+#    |                     | |                       |
+#    |                     | |                       |
 histograms:
-  # Distance between labels and plot axis
-  padding: 0.2 # in inches
-
-  # Distance between bar and value labels
-  bar_pad: 0.1 # In inches
-
-  # Relative width of bars (1 = full bin width)
-  rwidth: 0.8
-
-  # distance of stats from corner
-  dist: 0.5 # in inches
-
   # The colors for the bars in the histograms. One per filter category
   colors:
     - "C0"
@@ -221,13 +287,33 @@ histograms:
     - "C3"
     - "C4"
 
-# TIMELINES
-############################################################
-timelines:
-  height: 3.0
+  layout:
+    width_labels: 1.5
+    width_plot: 4
+    width_summary: 0.5
+    width_pad: 0.4
+    height_bar: 0.4
+    height_rel_pad_questions: 0.4
+    bar_label_pad: 0.02
+    pad_summary_right: 0.1
+    pad_summary_top: 0.1
 
-  dist: 0.6
+  font_legend:
+    family: sans_serif
+    style: normal
+    size: 12
 
-  colors:
-    - "blue"
-    - "red"
+  font_labels:
+    family: sans_serif
+    style: normal
+    size: 12
+
+  font_bar_labels:
+    family: sans_serif
+    style: normal
+    size: 10
+
+  font_summary:
+    family: sans_serif
+    style: normal
+    size: 8

@@ -73,6 +73,10 @@ class WrapText(Text):
                     "If x_units=inches need to pass a valid Figure object."
                 )
             x = inches_to_figure(x, 0.0, figure)[0]
+        elif x_units == "data":
+            if not isinstance(ax, Axes):
+                raise ValueError("If x_units=data need to pass a valid Axis object.")
+            x = data_to_figure(x, 0.0, ax)[0]
         else:
             raise ValueError(f"x_unit {x_units} not known")
 
@@ -91,7 +95,7 @@ class WrapText(Text):
             y = axis_to_figure(0.0, y, ax)[1]
         elif y_units == "data":
             if not isinstance(ax, Axes):
-                raise ValueError("If y_units=axis need to pass a valid Axis object.")
+                raise ValueError("If y_units=data need to pass a valid Axis object.")
             y = data_to_figure(0.0, y, ax)[1]
         elif y_units == "inches":
             if not isinstance(figure, Figure):

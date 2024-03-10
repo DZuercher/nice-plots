@@ -404,7 +404,7 @@ def get_histograms(
     config: Configuration,
     groups: list[str],
     codebook: pd.DataFrame,
-    data: pd.DataFrame,
+    data: Data,
     n_variables: int,
     value_map: Any | None,
 ) -> tuple[list, int, int]:
@@ -465,15 +465,13 @@ def get_geometry(config: Configuration, groups: list[str]) -> dict:
 
     if n_bars % 2 == 0:
         # even number of bars
-        n_bars_above_0 = n_bars / 2
-        positions = (pad_groups + bar_height) / 2 + np.arange(n_bars_above_0) * (
+        positions = (pad_groups + bar_height) / 2 + np.arange(n_bars / 2) * (
             bar_height + pad_groups
         )
         positions = np.append(positions, -1.0 * positions)
     else:
         # uneven number of bars
-        n_bars_above_0 = (n_bars - 1) / 2
-        positions = (np.arange(n_bars_above_0) + 1) * (bar_height + pad_groups)
+        positions = (np.arange((n_bars - 1) / 2) + 1) * (bar_height + pad_groups)
         positions = np.append(positions, -1.0 * positions)
         positions = np.append(0, positions)
     geometry["central_bar_positions"] = positions

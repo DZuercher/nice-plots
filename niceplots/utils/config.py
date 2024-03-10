@@ -135,10 +135,37 @@ class LineplotsConfiguration(ConfigBase):
 class HistogramsConfiguration(ConfigBase):
     def __init__(self) -> None:
         self.colors = ["C0", "C1", "C2", "C3", "C4"]
-        self.padding = 0.2
-        self.bar_pad = 0.1
-        self.rwidth = 0.8
-        self.dist = 0.5
+        self.layout = {
+            "width_labels": 1.5,
+            "width_plot": 4,
+            "width_pad": 0.2,
+            "height_bar": 0.4,
+            "height_rel_pad_questions": 0.4,
+            "bar_label_pad": 0.02,
+            "width_summary": 0.5,
+            "pad_summary_right": 0.1,
+            "pad_summary_top": 0.1,
+        }
+        self.font_legend = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+        self.font_labels = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 12,  # in points
+        }
+        self.font_summary = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 8,  # in points
+        }
+        self.font_bar_labels = {
+            "family": "sans-serif",
+            "style": "normal",
+            "size": 10,  # in points
+        }
 
 
 class TimelinesConfiguration(ConfigBase):
