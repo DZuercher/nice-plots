@@ -6,7 +6,7 @@ Introduction
 ============
 
 nice-plots allows to easily and automatically visualize survey data.
-Currently there are 4 different types of visualization:
+Currently there are 3 different types of visualization:
 
 barplot:
 --------
@@ -40,17 +40,12 @@ Enter the nice-plots directory:
 
 Install nice-plots:
 
-    $ pip3 install . --user
-
-Depending on your operating system you might need to add the nice-plots
-executable to the system PATH!
-(There will be a warning in the pip log if that's the case)
-
+    $ pip install . --user
 
 Usage
 =====
 
-nice-plots is most easily used with the terminal.
+nice-plots is most easily used via CLI.
 Just run
 
     $ nice-plots --help
@@ -58,53 +53,23 @@ Just run
 to get a list of the arguments that nice-plots accepts.
 nice-plots requires a YAML config file, a codebook and a data table.
 
-There is an example configuration file in the examples directory explaining the
+There is an example configuration file in the examples directory explaining all the
 different keywords that nice-plots accepts.
 
-The plot_type keyword allows you to switch between different types of
+The plot_type keyword allows you to switch between the different types of
 visualization.
 
-The output_name keyword specifies how the output directory will be called.
+The name keyword specifies how the output directory will be called. The output directory is created in the location indicated by the prefix argument.
 
-nice-plots copies the codebook and config file to the output directory and will
-use these instead of the one provided with --config_path and --codebook_path
-whenever you rerun nice-plots with the same output_name.
+nice-plots copies the codebook, config file and the data to the output directory and will
+use these instead of the ones provided with the config, data and codebook arguments
+whenever you rerun nice-plots with the same name.
+You can ignore the previously generated files by passing the full-rerun keyword.
 
 For a quick test of nice-plots navigate over to the examples directory and
 run:
 
-    $ nice-plots --config_path=example_config.yml --codebook_path=example_codebook.csv --data_path=example_data.csv --output_name=output1 --plot_type=bars
-
-
-Graphical user interface:
-=========================
-
-nice-plots also features a small GUI for those that do not like the command line so much. The GUI is only supported for Linux systems at the moment.
-
-
-General tab:
---------
-
-.. image:: examples/gui_images/general.png
-    :width: 500px
-
-Configuration tab:
---------
-
-.. image:: examples/gui_images/config.png
-    :width: 500px
-
-Codebook tab:
---------
-
-.. image:: examples/gui_images/codebook.png
-    :width: 500px
-
-Preview tab:
---------
-
-.. image:: examples/gui_images/preview.png
-    :width: 500px
+    $ nice-plots --config=example_config.yml --codebook=example_codebook.csv --data=example_data.csv --name=output1 --plot_type=bars
 
 Credits
 =======

@@ -132,7 +132,7 @@ def cli():
     required=True,
     multiple=True,
     type=click.Path(path_type=Path),
-    help="Path to the data file, or list of such paths (in csv format)",
+    help="Path to the data file, or list of such paths",
 )
 @click.option(
     "-b",
@@ -160,9 +160,9 @@ def cli():
     "--plot_type",
     required=False,
     default=["all"],
-    type=click.Choice(["bars", "lines", "histograms", "timelines", "all"]),
+    type=click.Choice(["barplots", "lineplots", "histograms", "all"]),
     multiple=True,
-    help="Type of plots to produce. If type=timeline expects a list of data_paths and also time_labels",
+    help="Type of plots to produce. If type=timeline expects a list of data_paths and also time_labels (DEPRECATED)",
 )
 @click.option(
     "-f",
