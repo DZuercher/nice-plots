@@ -1,5 +1,6 @@
 # Authors: Dominik Zuercher, Valeria Glauser
 import os
+from enum import Enum
 from pathlib import Path
 from typing import Tuple
 
@@ -12,6 +13,13 @@ from niceplots.utils.data import setup_data
 from niceplots.utils.nice_logger import init_logger, set_logger_level
 
 logger = init_logger(__file__)
+
+
+class PlotTypes(Enum):
+    barplots = 1
+    lineplots = 2
+    histograms = 3
+    timelines = 4
 
 
 def check_arguments(data_paths: Tuple[Path], data_labels: Tuple[str]) -> None:
@@ -78,35 +86,34 @@ def main(
     plot_types = set()
     for pt in plot_type:
         if pt == "all":
-            plot_types.add("barplots")
-            plot_types.add("lineplots")
-            plot_types.add("histograms")
-            # plot_types.add("timelines")
+            plot_types.add(PlotTypes.barplots)
+            plot_types.add(PlotTypes.histograms)
+            plot_types.add(PlotTypes.lineplots)
         elif pt == "barplots":
-            plot_types.add("barplots")
+            plot_types.add(PlotTypes.barplots)
         elif pt == "lineplots":
-            plot_types.add("lineplots")
+            plot_types.add(PlotTypes.lineplots)
         elif pt == "histograms":
-            plot_types.add("histograms")
+            plot_types.add(PlotTypes.histograms)
         elif pt == "timelines":
-            plot_types.add("timelines")
+            plot_types.add(PlotTypes.timelines)
         else:
             raise ValueError(f"Plot type {pt} is unknown")
 
     logger.info("Producing plots")
-    for pt in plot_types:
-        if pt == "barplots":
+    for p in plot_types:
+        if p == PlotTypes.barplots:
             exec_func = barplot.plot_barplots
-        elif pt == "lineplots":
+        elif p == PlotTypes.lineplots:
             exec_func = lineplot.plot_lineplots
-        elif pt == "histograms":
+        elif p == PlotTypes.histograms:
             exec_func = histogram.plot_histograms
-        elif pt == "timelines":
+        elif p == PlotTypes.timelines:
             raise NotImplementedError("Timelines is currently not implemented.")
         else:
-            raise Exception(f"Plot type {pt} does not exist.")
+            raise Exception(f"Plot type {p} does not exist.")
 
-        logger.info(f"Producing plots of type {pt}")
+        logger.info(f"Producing plots of type {p}")
         exec_func(config, codebook, data_collection)
     logger.info("nice-plots finished without errors :)")
 
