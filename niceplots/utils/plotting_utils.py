@@ -106,14 +106,16 @@ class WrapText(Text):
         else:
             raise ValueError(f"y_unit {y_units} not known")
 
+        # Note: width must be in points because pdfrenderer is used as backend
+        dpi = figure.dpi if figure is not None else 96.0
+        self.width = self.width * 72.0 / dpi
         super().__init__(x=x, y=y, text=text, wrap=True, **kwargs)
 
     ####################################
     # Overriding matplotlib Text methods
     ####################################
     def _get_wrap_line_width(self):
-        # Note: width must be in points because pdfrenderer is used as backend
-        return self.width / 1.333
+        return self.width
 
 
 def figure_to_display(

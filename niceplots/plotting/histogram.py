@@ -124,7 +124,7 @@ def plot_histogram(
 
     # save plot
     fig.savefig(
-        f"{config.output_directory}/{config.output_name}_{int(block)}.{config.plotting.format}",
+        f"{config.output_directory}/{config.output_name}_histogram_{int(block)}.{config.plotting.format}",
         transparent=False,
         bbox_inches="tight",
     )
@@ -135,6 +135,8 @@ def add_legend(ax: Axes, config: Configuration, groups: list[str]) -> None:
     if len(groups) > 0:
         patches = []
         for ii, group in enumerate(groups):
+            if group == "nice_plots_default_group":
+                continue
             patches.append(Patch(color=config.histograms.colors[ii], label=group))
         ax.legend(
             handles=patches,
@@ -303,7 +305,7 @@ def get_histogram_data(
     # drop nans
     d = d[~d.isna()]
     n_no_answers = (d == no_answer_code).sum()
-    n_answers = len(d)
+    n_answers = ((d != no_answer_code) & (d != code.missing_label)).sum()
 
     if hist_type == HistogramType.Single:
         for group in groups:
@@ -315,26 +317,28 @@ def get_histogram_data(
             d = d[variable]
             # drop nans
             d = d[~d.isna()]
-            # drop missing answers
+            # drop no answers
             d = d[~(d == no_answer_code)]
+            # drop missing answers
+            d = d[~(d == code.missing_label)]
             for key in list(value_map.keys() if value_map is not None else []):
                 n = (d == key).sum()
                 hist_data_abs[group].append(n)
                 max_value = max(n, max_value)
     else:
         for group in groups:
-            d = data.data[data.data["nice_plots_group"] == group]
+            data_group = data.data[data.data["nice_plots_group"] == group]
             hist_data_abs[group] = []
-
             for id_v in range(n_variables):
                 code = codebook.iloc[id_v]
                 variable = code["variable"]
-                d = d[variable]
+                d = data_group[variable]
                 # drop nans
                 d = d[~d.isna()]
-                # drop missing answers
+                # drop no answers
                 d = d[~(d == no_answer_code)]
-
+                # drop missing answers
+                d = d[~(d == code.missing_label)]
                 # count number of Yes (1=Yes, 0=No)
                 n = d.sum()
                 hist_data_abs[group].append(n)

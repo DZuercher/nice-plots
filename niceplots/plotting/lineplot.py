@@ -101,7 +101,7 @@ def plot_lineplot(
 
     # save plot
     fig.savefig(
-        f"{config.output_directory}/{config.output_name}_{int(block)}.{config.plotting.format}",
+        f"{config.output_directory}/{config.output_name}_lineplot_{int(block)}.{config.plotting.format}",
         transparent=False,
         bbox_inches="tight",
     )
@@ -263,6 +263,8 @@ def plot_crosses(
             # drop nans
             d = d[~d.isna()]
             # drop missing answers
+            d = d[~(d == code.missing_label)]
+            # drop no answer
             d = d[~(d == no_answer_code)]
             mean = np.mean(d)
             # normalize to 0-1 scale
@@ -371,6 +373,8 @@ def add_legend(ax, config, groups) -> None:
     if len(groups) > 0:
         patches = []
         for ii, group in enumerate(groups):
+            if group == "nice_plots_default_group":
+                continue
             patches.append(Patch(color=config.lineplots.colors[ii], label=group))
         ax.legend(
             handles=patches,

@@ -38,10 +38,6 @@ class DataConfiguration(ConfigBase):
     def update(self, config_dict: Dict) -> None:
         for key, value in config_dict.items():
             if key == "groups":
-                if "nice_plots_default_group" in value.keys():
-                    raise ValueError(
-                        "Your groups must not contain a group named: nice_plots_default_group"
-                    )
                 if len(value.keys()) == 0:
                     value = {"nice_plots_default_group": "True"}
             setattr(self, key, value)

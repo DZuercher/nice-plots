@@ -133,7 +133,7 @@ def plot_barplot(
 
     # save plot
     fig.savefig(
-        f"{config.output_directory}/{config.output_name}_{int(block)}.{config.plotting.format}",
+        f"{config.output_directory}/{config.output_name}_barplot_{int(block)}.{config.plotting.format}",
         transparent=False,
         bbox_inches="tight",
     )
@@ -149,6 +149,8 @@ def add_group_labels(
 ) -> None:
     for ax in axes:
         for id_g, group in enumerate(groups):
+            if group == "nice_plots_default_group":
+                continue
             group_label = WrapText(
                 x=config.barplots.layout["width_question"]
                 + config.barplots.layout["width_groups"]
@@ -189,6 +191,8 @@ def add_question_summaries(
 
             # drop nans
             d = d[~d.isna()]
+            # drop missing answers
+            d = d[~(d == code.missing_label)]
 
             summary = get_summary(d, no_answer_code)
 
@@ -216,7 +220,7 @@ def get_summary(d: pd.DataFrame, no_answer_code: int) -> str:
     n_no_answer = (d == no_answer_code).sum()
     d = d[~(d == no_answer_code)]
     mean = d.mean()
-    std = d.sem()
+    std = d.std()
 
     if d.size > 0:
         st = f"n = {d.size}\nm = {mean:.2f}\ns = {std:.2f}"
@@ -422,6 +426,8 @@ def get_histograms(
             # drop nans
             d = d[~d.isna()]
             # drop missing answers
+            d = d[~(d == code.missing_label)]
+            # drop no answer
             d = d[~(d == no_answer_code)]
             min_value = min(d.min(), min_value)
             max_value = max(d.max(), max_value)

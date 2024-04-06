@@ -49,7 +49,13 @@ class Data:
         self.data["nice_plots_group"] = None
         for group_name, group_string in self.groups.items():
             try:
-                index_grouped = self.data.query(group_string).index
+                if isinstance(group_string, bool):
+                    if group_string:
+                        index_grouped = self.data.index
+                    else:
+                        index_grouped = pd.Index()
+                else:
+                    index_grouped = self.data.query(group_string).index
             except BaseException as error:
                 raise ValueError(
                     f"Unable to apply your group filter {group_string} named {group_name} to data {self.name}"
@@ -74,7 +80,11 @@ class Data:
                 mapping = eval(row.value_map)
                 data_test = self.data[row.variable]
                 data_test = data_test[
-                    ~(data_test.isna() | (data_test == self.no_answer_code))
+                    ~(
+                        data_test.isna()
+                        | (data_test == self.no_answer_code)
+                        | (data_test == row.missing_label)
+                    )
                 ]
                 if data_test.map(mapping).isna().sum() > 0:
                     raise ValueError(
