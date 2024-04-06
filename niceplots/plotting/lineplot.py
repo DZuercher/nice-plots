@@ -297,6 +297,7 @@ def plot_crosses(
                     [0, 1],
                     color=config.lineplots.colors[id_g],
                     lw=3,
+                    clip_on=False,
                 )
 
             # add connecting line downwards
@@ -306,6 +307,7 @@ def plot_crosses(
                     [0, -1],
                     color=config.lineplots.colors[id_g],
                     lw=3,
+                    clip_on=False,
                 )
 
 

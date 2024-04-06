@@ -38,8 +38,6 @@ class Data:
             raise ValueError(
                 f"Data Object {self.name}: Did not find {missing_vars} in data, but they are in the codebook."
             )
-        self.data = self.data.loc[:, self.variables.to_list()]
-
         # add category column
         if "nice_plots_group" in self.data.columns:
             raise ValueError(
