@@ -65,7 +65,8 @@ class WrapText(Text):
             pass
         elif x_units == "axis":
             if not isinstance(ax, Axes):
-                raise ValueError("If x_units=axis need to pass a valid Axis object.")
+                raise ValueError(
+                    "If x_units=axis need to pass a valid Axis object.")
             x = axis_to_figure(x, 0.0, ax)[0]
         elif x_units == "inches":
             if not isinstance(figure, Figure):
@@ -75,7 +76,8 @@ class WrapText(Text):
             x = inches_to_figure(x, 0.0, figure)[0]
         elif x_units == "data":
             if not isinstance(ax, Axes):
-                raise ValueError("If x_units=data need to pass a valid Axis object.")
+                raise ValueError(
+                    "If x_units=data need to pass a valid Axis object.")
             x = data_to_figure(x, 0.0, ax)[0]
         else:
             raise ValueError(f"x_unit {x_units} not known")
@@ -91,11 +93,13 @@ class WrapText(Text):
             pass
         elif y_units == "axis":
             if not isinstance(ax, Axes):
-                raise ValueError("If y_units=axis need to pass a valid Axis object.")
+                raise ValueError(
+                    "If y_units=axis need to pass a valid Axis object.")
             y = axis_to_figure(0.0, y, ax)[1]
         elif y_units == "data":
             if not isinstance(ax, Axes):
-                raise ValueError("If y_units=data need to pass a valid Axis object.")
+                raise ValueError(
+                    "If y_units=data need to pass a valid Axis object.")
             y = data_to_figure(0.0, y, ax)[1]
         elif y_units == "inches":
             if not isinstance(figure, Figure):
@@ -105,7 +109,6 @@ class WrapText(Text):
             y = inches_to_figure(0.0, y, figure)[1]
         else:
             raise ValueError(f"y_unit {y_units} not known")
-
         # Note: width must be in points because pdfrenderer is used as backend
         dpi = figure.dpi if figure is not None else 96.0
         self.width = self.width * 72.0 / dpi

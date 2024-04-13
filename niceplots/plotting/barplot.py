@@ -116,9 +116,11 @@ def plot_barplot(
     add_bars(
         n_variables, axes, config, groups, geometry, histograms, colors, text_color
     )
-    add_question_labels(fig, config, codebook_block, n_variables, N_UNITS_LEGEND)
+    add_question_labels(fig, config, codebook_block,
+                        n_variables, N_UNITS_LEGEND)
     add_group_labels(fig, axes, groups, geometry, config)
-    add_question_summaries(fig, config, data, codebook_block, axes, groups, geometry)
+    add_question_summaries(
+        fig, config, data, codebook_block, axes, groups, geometry)
     add_legend(
         fig,
         axes[0],
@@ -238,7 +240,7 @@ def add_question_labels(
     n_units_legend: int,
 ) -> None:
     height_question_figure = 1.0 / (n_variables + n_units_legend)
-    for id_v, question in enumerate(codebook_block.label):
+    for id_v, question in enumerate(reversed(list(codebook_block.label))):
         center_position_question = (0.5 + id_v) * height_question_figure
         question_label = WrapText(
             x=0.0,
@@ -434,7 +436,8 @@ def get_histograms(
 
     if value_map is None:
         # no mapping provided (assume numeric values)
-        bin_edges = np.linspace(min_value, max_value, config.plotting.nbins + 1)
+        bin_edges = np.linspace(min_value, max_value,
+                                config.plotting.nbins + 1)
     else:
         bin_centers = np.asarray(list(value_map.keys()))
         bin_edges = np.append(bin_centers, bin_centers[-1] + 1) - 0.5
@@ -454,7 +457,8 @@ def get_histograms(
             d = d[~(d == no_answer_code)]
 
             hist = np.histogram(d, bins=bin_edges)[0]
-            histograms_variable[group] = [hist, np.cumsum(np.append(0, hist[:-1]))]
+            histograms_variable[group] = [
+                hist, np.cumsum(np.append(0, hist[:-1]))]
         histograms.append(histograms_variable)
     return histograms, min_value, max_value
 
@@ -477,10 +481,11 @@ def get_geometry(config: Configuration, groups: list[str]) -> dict:
         positions = np.append(positions, -1.0 * positions)
     else:
         # uneven number of bars
-        positions = (np.arange((n_bars - 1) / 2) + 1) * (bar_height + pad_groups)
+        positions = (np.arange((n_bars - 1) / 2) + 1) * \
+            (bar_height + pad_groups)
         positions = np.append(positions, -1.0 * positions)
         positions = np.append(0, positions)
-    geometry["central_bar_positions"] = positions
+    geometry["central_bar_positions"] = np.sort(positions)[::-1]
     return geometry
 
 
@@ -534,7 +539,8 @@ def add_legend(
                 config.barplots.layout["width_question"]
                 + config.barplots.layout["width_groups"]
                 + 2 * config.barplots.layout["width_pad"]
-                + config.barplots.layout["width_plot"] * (1 - WIDTH_COLORBAR_REL) / 2,
+                + config.barplots.layout["width_plot"] *
+                (1 - WIDTH_COLORBAR_REL) / 2,
                 0,
             )
         )[0]
@@ -543,7 +549,8 @@ def add_legend(
             (config.barplots.layout["width_plot"] * WIDTH_COLORBAR_REL, 0.0)
         )[0]
         y_size = inches_to_fig.transform(
-            (0, HEIGHT_COLORBAR_REL * config.barplots.layout["height_question"])
+            (0, HEIGHT_COLORBAR_REL *
+             config.barplots.layout["height_question"])
         )[1]
 
         cax = fig.add_axes([left, bottom, x_size, y_size], frame_on=False)

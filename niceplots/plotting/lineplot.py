@@ -95,8 +95,10 @@ def plot_lineplot(
         groups, n_variables, codebook_block, data, axes, config, min_value, max_value
     )
 
-    add_question_labels(fig, config, codebook_block, n_variables, N_UNITS_LEGEND)
-    add_edge_labels(fig, config, n_variables, N_UNITS_LEGEND, min_label, max_label)
+    add_question_labels(fig, config, codebook_block,
+                        n_variables, N_UNITS_LEGEND)
+    add_edge_labels(fig, config, n_variables,
+                    N_UNITS_LEGEND, min_label, max_label)
     add_legend(axes[0], config, groups)
 
     # save plot
@@ -116,7 +118,7 @@ def add_question_labels(
     n_units_legend: int,
 ) -> None:
     height_question_figure = 1.0 / (n_variables + n_units_legend)
-    for id_v, question in enumerate(codebook_block.label):
+    for id_v, question in enumerate(reversed(list(codebook_block.label))):
         center_position_question = (0.5 + id_v) * height_question_figure
         question_label = WrapText(
             x=0.0,
@@ -377,7 +379,8 @@ def add_legend(ax, config, groups) -> None:
         for ii, group in enumerate(groups):
             if group == "nice_plots_default_group":
                 continue
-            patches.append(Patch(color=config.lineplots.colors[ii], label=group))
+            patches.append(
+                Patch(color=config.lineplots.colors[ii], label=group))
         ax.legend(
             handles=patches,
             ncol=2,
